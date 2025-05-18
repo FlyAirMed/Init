@@ -12,6 +12,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "@iconify-json/lucide": "^1.2.42",
     "@iconify-json/simple-icons": "^1.2.34",
     "@internationalized/date": "^3.8.0",

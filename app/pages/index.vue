@@ -79,20 +79,6 @@
                       }" class="w-full bg-transparent pt-6 sm:pt-8 pb-2 sm:pb-3 px-4" variant="none" />
                   </div>
 
-                  <!-- Swap Button (absolute positioned) -->
-                  <button type="button" @click="
-                    [departure, arrival] = [
-                      arrival,
-                      departure,
-                    ]
-                    "
-                    class="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-4 md:-left-3 lg:-left-8 z-10 flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none"
-                      viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                  </button>
                 </div>
               </div>
 
@@ -115,7 +101,7 @@
                     <div class="flex items-center">
                       <span class="text-sm sm:text-base text-gray-800 font-medium truncate">
                         {{
-                          tripType === "roundTrip"
+                          tripType === TripType.ROUND_TRIP
                             ? formatDate(
                               dateRange.start
                             ) +
@@ -136,17 +122,86 @@
                   </div>
                 </div>
 
-                <!-- Date Picker (Range for Round Trip, Single for One Way) -->
+                <!-- Date Picker (Grid for available dates) -->
                 <div v-if="showDatePicker"
                   class="absolute z-50 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 sm:p-5 calendar-wrapper backdrop-blur-xl bg-white/95 transition-all duration-300 left-4 right-4 sm:left-auto sm:right-auto">
-                  <!-- Show range calendar for round trip -->
-                  <UCalendar v-if="tripType === 'roundTrip'" v-model="dateRange" range size="sm" sm:size="md"
-                    color="primary" class="min-w-[280px]" :min="today" />
-                  <!-- Show single date calendar for one way -->
-                  <UCalendar v-else v-model="singleDate" size="sm" sm:size="md" color="primary" class="min-w-[280px]"
-                    :min="today" />
-                  <div class="mt-4 sm:mt-5 flex justify-end">
-                    <button @click="showDatePicker = false"
+                  <!-- Loading indicator -->
+                  <div v-if="isSearchingDates" class="flex flex-col items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                    <p class="text-gray-600">Verfügbare Daten werden geladen...</p>
+                  </div>
+
+                  <!-- Error message -->
+                  <div v-else-if="errorMessage && availableDates.length === 0" class="p-4 text-center text-red-600">
+                    {{ errorMessage }}
+                  </div>
+
+                  <!-- Show message if no dates available -->
+                  <div v-else-if="availableDates.length === 0" class="p-4 text-center text-gray-600">
+                    Keine Flüge zwischen diesen Städten gefunden.
+                  </div>
+
+                  <!-- Available dates display -->
+                  <div v-else>
+                    <h3 class="text-lg font-semibold mb-3">{{ tripType === TripType.ROUND_TRIP ? 'Hinflug wählen' :
+                      'Flugtag wählen' }}</h3>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-4">
+                      <button v-for="dateInfo in availableDates" :key="dateInfo.date"
+                        @click="selectFlightDate(dateInfo.date)" :class="[
+                          'p-2 rounded-lg border flex flex-col items-center transition-colors',
+                          (tripType === TripType.ROUND_TRIP && toDateString(dateRange.start) === dateInfo.date) ||
+                            (tripType === TripType.ONE_WAY && toDateString(singleDate) === dateInfo.date)
+                            ? 'bg-blue-600 text-white border-blue-700'
+                            : 'bg-white hover:bg-blue-50 border-gray-200'
+                        ]">
+                        <span class="text-sm font-semibold">{{ formatDateShort(dateInfo.date) }}</span>
+                        <span class="text-xs" :class="{ 'text-blue-100': isDateSelected(dateInfo.date) }">{{
+                          dateInfo.price }}€</span>
+                        <span class="text-xs" :class="{ 'text-blue-100': isDateSelected(dateInfo.date) }">
+                          {{ dateInfo.availableSeats }} Plätze
+                        </span>
+                      </button>
+                    </div>
+
+                    <!-- Return flight selection for round trips -->
+                    <div v-if="tripType === TripType.ROUND_TRIP && availableReturnDates.length > 0">
+                      <h3 class="text-lg font-semibold mt-4 mb-3">Rückflug wählen</h3>
+
+                      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                        <button v-for="dateInfo in availableReturnDates" :key="dateInfo.date"
+                          @click="selectReturnDate(dateInfo.date)" :class="[
+                            'p-2 rounded-lg border flex flex-col items-center transition-colors',
+                            toDateString(dateRange.end) === dateInfo.date
+                              ? 'bg-blue-600 text-white border-blue-700'
+                              : 'bg-white hover:bg-blue-50 border-gray-200'
+                          ]">
+                          <span class="text-sm font-semibold">{{ formatDateShort(dateInfo.date) }}</span>
+                          <span class="text-xs"
+                            :class="{ 'text-blue-100': toDateString(dateRange.end) === dateInfo.date }">{{
+                              dateInfo.price }}€</span>
+                          <span class="text-xs"
+                            :class="{ 'text-blue-100': toDateString(dateRange.end) === dateInfo.date }">
+                            {{ dateInfo.availableSeats }} Plätze
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 sm:mt-5 flex justify-between">
+                    <button @click="refreshAvailableDates"
+                      class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]">
+                      <span class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Aktualisieren
+                      </span>
+                    </button>
+                    <button @click="confirmDateSelection"
                       class="px-4 sm:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]">
                       Auswählen
                     </button>
@@ -213,7 +268,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.adults
-                        }}</span>
+                          }}</span>
                         <button @click="
                           incrementPassenger(
                             'adults'
@@ -256,7 +311,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.children
-                        }}</span>
+                          }}</span>
                         <button @click="
                           incrementPassenger(
                             'children'
@@ -299,7 +354,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.infants
-                        }}</span>
+                          }}</span>
                         <button @click="
                           incrementPassenger(
                             'infants'
@@ -325,10 +380,17 @@
             </div>
 
             <!-- Search Button -->
-            <div class="mt-6 lg:mt-8 flex justify-center lg:justify-end px-0 sm:px-6">
+            <div class="mt-6 lg:mt-8 flex flex-col items-center lg:items-end px-0 sm:px-6">
+              <!-- Error message -->
+              <div v-if="errorMessage" class="mb-4 w-full text-center lg:text-right text-red-600 font-medium">
+                {{ errorMessage }}
+              </div>
+
               <button @click="handleBooking"
-                class="w-full sm:w-auto px-6 sm:px-12 md:px-20 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-base sm:text-lg font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transform hover:scale-[1.02] active:scale-[0.98]">
-                Flüge suchen
+                class="w-full sm:w-auto px-6 sm:px-12 md:px-20 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-base sm:text-lg font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transform hover:scale-[1.02] active:scale-[0.98]"
+                :disabled="isSearchingFlights" :class="{ 'opacity-70 cursor-not-allowed': isSearchingFlights }">
+                <span v-if="isSearchingFlights">Suchen...</span>
+                <span v-else>Flüge suchen</span>
               </button>
             </div>
           </div>
@@ -339,17 +401,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { CalendarDate } from "@internationalized/date";
+import { AIRPORTS, TripType, PassengerType } from '../../types';
 
-const airports = [
-  { value: "VIE", label: "VIE - Wien" },
-  { value: "CGN", label: "CGN - Köln/Bonn" },
-  { value: "ATH", label: "ATH - Athen" },
-  { value: "DAM", label: "DAM - Damaskus" },
-];
+// Replace static airports with the typed constant from types
+const airports = Object.entries(AIRPORTS).map(([code, details]) => ({
+  value: code,
+  label: `${code} - ${details.name}`
+}));
 
-const tripType = ref("roundTrip");
+// Use the TripType enum
+const tripType = ref(TripType.ROUND_TRIP);
 const departure = ref("");
 const arrival = ref("");
 
@@ -362,25 +425,39 @@ const today = new CalendarDate(
 
 // For round trip, use a range object
 const dateRange = ref({
-  start: new CalendarDate(2024, 5, 18),
-  end: new CalendarDate(2024, 6, 12),
+  start: today,
+  end: new CalendarDate(
+    today.year,
+    today.month,
+    today.day + 7
+  ),
 });
 
 // For one-way trip, use a single date
-const singleDate = ref(new CalendarDate(2024, 5, 18));
+const singleDate = ref(today);
 
 // UI state
 const showDatePicker = ref(false);
 const passengersActive = ref(false);
+const errorMessage = ref("");
+
+// Available dates from API
+const availableDates = ref([]);
+const availableReturnDates = ref([]);
+
+// Handle loading states
+const isSearchingFlights = ref(false);
+const isSearchingDates = ref(false);
 
 const passengers = reactive({
-  adults: 1,
-  children: 0,
-  infants: 0,
+  [PassengerType.ADULT]: 1,
+  [PassengerType.CHILD]: 0,
+  [PassengerType.INFANT]: 0,
+  [PassengerType.SENIOR]: 0
 });
 
 const totalPassengers = computed(() => {
-  return passengers.adults + passengers.children + passengers.infants;
+  return Object.values(passengers).reduce((sum, count) => sum + count, 0);
 });
 
 const formatDate = (calendarDate) => {
@@ -401,6 +478,19 @@ const formatDate = (calendarDate) => {
   return `${dayName} ${day.toString().padStart(2, "0")}.${month
     .toString()
     .padStart(2, "0")}.`;
+};
+
+// Convert CalendarDate to YYYY-MM-DD string format
+const toDateString = (calendarDate) => {
+  if (!calendarDate) return "";
+  return `${calendarDate.year}-${calendarDate.month.toString().padStart(2, "0")}-${calendarDate.day.toString().padStart(2, "0")}`;
+};
+
+// Convert YYYY-MM-DD string to CalendarDate
+const toCalendarDate = (dateString) => {
+  if (!dateString) return null;
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new CalendarDate(year, month, day);
 };
 
 const toggleDatePicker = () => {
@@ -426,28 +516,278 @@ const incrementPassenger = (type) => {
 const decrementPassenger = (type) => {
   if (
     passengers[type] > 0 &&
-    (type !== "adults" || passengers[type] > 1)
+    (type !== PassengerType.ADULT || passengers[type] > 1)
   ) {
     passengers[type]--;
   }
 };
 
+// Fetch available dates when origin and destination are selected
+watch([departure, arrival], async ([newDeparture, newArrival]) => {
+  if (newDeparture && newArrival) {
+    await fetchAvailableDates();
+  }
+}, { immediate: false });
 
-const handleBooking = () => {
-  // Handle booking logic here
-  console.log("handleBooking");
-  console.log({
-    tripType: tripType.value,
-    departure: departure.value,
-    arrival: arrival.value,
-    departureDate:
-      tripType.value === "roundTrip"
-        ? dateRange.value.start
-        : singleDate.value,
-    returnDate:
-      tripType.value === "roundTrip" ? dateRange.value.end : null,
-    passengers,
-  });
+// Handle changes to trip type
+watch(tripType, (newTripType) => {
+  // Reset dateRange if switching between trip types
+  if (newTripType === TripType.ONE_WAY) {
+    // We'll use the departure date from the round trip if available
+    if (dateRange.value.start) {
+      singleDate.value = dateRange.value.start;
+    }
+  } else {
+    // We'll use the one-way date as the start date if available
+    if (singleDate.value) {
+      dateRange.value.start = singleDate.value;
+      // Set the return date to 7 days after departure
+      dateRange.value.end = new CalendarDate(
+        singleDate.value.year,
+        singleDate.value.month,
+        singleDate.value.day + 7
+      );
+    }
+  }
+});
+
+// Fetch available flight dates from the API
+const fetchAvailableDates = async () => {
+  if (!departure.value || !arrival.value) {
+    return;
+  }
+
+  try {
+    isSearchingDates.value = true;
+    errorMessage.value = "";
+
+    const response = await $fetch('/api/flights/available-dates', {
+      method: 'POST',
+      body: {
+        origin: departure.value,
+        destination: arrival.value
+      }
+    });
+
+    if (response.success && response.data) {
+      availableDates.value = response.data.dates;
+
+      // If we have available dates, set the default date to the first available date
+      if (availableDates.value.length > 0) {
+        const firstDate = toCalendarDate(availableDates.value[0].date);
+
+        if (tripType.value === TripType.ROUND_TRIP) {
+          dateRange.value.start = firstDate;
+
+          // Also fetch return dates
+          await fetchReturnDates(firstDate);
+        } else {
+          singleDate.value = firstDate;
+        }
+      }
+    } else if (response.error) {
+      errorMessage.value = response.error.message;
+      console.error('Error fetching dates:', response.error);
+    }
+  } catch (error) {
+    errorMessage.value = "Failed to load available dates. Please try again.";
+    console.error('Error in fetchAvailableDates:', error);
+  } finally {
+    isSearchingDates.value = false;
+  }
+};
+
+// Fetch available return flight dates
+const fetchReturnDates = async (departureDate) => {
+  if (!departure.value || !arrival.value || !departureDate) {
+    return;
+  }
+
+  try {
+    // For return flights, we swap origin and destination
+    const response = await $fetch('/api/flights/available-dates', {
+      method: 'POST',
+      body: {
+        origin: arrival.value,  // Swapped
+        destination: departure.value  // Swapped
+      }
+    });
+
+    if (response.success && response.data) {
+      // Filter dates that are on or after the departure date
+      const departureDateStr = toDateString(departureDate);
+      availableReturnDates.value = response.data.dates.filter(
+        date => date.date >= departureDateStr
+      );
+
+      // Set a default return date if available
+      if (availableReturnDates.value.length > 0) {
+        // Try to find a date 7 days after departure, or use the first available
+        const preferredReturnDate = toDateString(new CalendarDate(
+          departureDate.year,
+          departureDate.month,
+          departureDate.day + 7
+        ));
+
+        const returnDateMatch = availableReturnDates.value.find(d => d.date === preferredReturnDate)
+          || availableReturnDates.value[0];
+
+        dateRange.value.end = toCalendarDate(returnDateMatch.date);
+      }
+    }
+  } catch (error) {
+    console.error('Error in fetchReturnDates:', error);
+  }
+};
+
+// Handle calendar date selection
+watch(() => dateRange.value.start, async (newDate) => {
+  if (tripType.value === TripType.ROUND_TRIP && newDate) {
+    await fetchReturnDates(newDate);
+  }
+}, { immediate: false });
+
+const handleBooking = async () => {
+  if (!departure.value || !arrival.value) {
+    errorMessage.value = "Please select both departure and destination airports.";
+    return;
+  }
+
+  try {
+    isSearchingFlights.value = true;
+    errorMessage.value = "";
+
+    // Prepare the search parameters
+    const searchParams = {
+      origin: departure.value,
+      destination: arrival.value,
+      tripType: tripType.value,
+      passengers: { ...passengers }
+    };
+
+    // Add date parameters based on trip type
+    if (tripType.value === TripType.ROUND_TRIP) {
+      searchParams.departureDate = toDateString(dateRange.value.start);
+      searchParams.returnDate = toDateString(dateRange.value.end);
+    } else {
+      searchParams.departureDate = toDateString(singleDate.value);
+    }
+
+    // Call the flight search API
+    const response = await $fetch('/api/flights/search', {
+      method: 'POST',
+      body: searchParams
+    });
+
+    if (response.success && response.data) {
+      // Navigate to results page with the search data
+      navigateTo({
+        path: '/flights',
+        query: {
+          search: btoa(JSON.stringify(searchParams)),
+          results: btoa(JSON.stringify(response.data))
+        }
+      });
+    } else if (response.error) {
+      errorMessage.value = response.error.message;
+    }
+  } catch (error) {
+    errorMessage.value = "An unexpected error occurred. Please try again.";
+    console.error('Error in handleBooking:', error);
+  } finally {
+    isSearchingFlights.value = false;
+  }
+};
+
+// Additional functions for the date formatter
+const formatDateShort = (dateString) => {
+  if (!dateString) return "";
+
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
+  const dayNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  const dayName = dayNames[date.getDay()];
+  const dayNum = day.toString().padStart(2, '0');
+  const monthNum = month.toString().padStart(2, '0');
+
+  return `${dayName} ${dayNum}.${monthNum}`;
+};
+
+// Check if a date is selected
+const isDateSelected = (dateString) => {
+  if (tripType.value === TripType.ROUND_TRIP) {
+    return toDateString(dateRange.value.start) === dateString;
+  } else {
+    return toDateString(singleDate.value) === dateString;
+  }
+};
+
+// Function to select a flight date
+const selectFlightDate = (dateString) => {
+  const calendarDate = toCalendarDate(dateString);
+
+  if (tripType.value === TripType.ROUND_TRIP) {
+    dateRange.value.start = calendarDate;
+    // Update return date options based on new departure date
+    fetchReturnDates(calendarDate);
+  } else {
+    singleDate.value = calendarDate;
+  }
+};
+
+// Function to select a return date
+const selectReturnDate = (dateString) => {
+  if (tripType.value === TripType.ROUND_TRIP) {
+    dateRange.value.end = toCalendarDate(dateString);
+  }
+};
+
+// Function to refresh available dates
+const refreshAvailableDates = async () => {
+  if (departure.value && arrival.value) {
+    errorMessage.value = "";
+    await fetchAvailableDates();
+
+    if (tripType.value === TripType.ROUND_TRIP && dateRange.value.start) {
+      await fetchReturnDates(dateRange.value.start);
+    }
+  } else {
+    errorMessage.value = "Bitte wählen Sie zuerst Abflug- und Zielort.";
+  }
+};
+
+// Function to confirm date selection
+const confirmDateSelection = () => {
+  // Close the date picker
+  showDatePicker.value = false;
+
+  // Validate the selected dates
+  if (tripType.value === TripType.ROUND_TRIP) {
+    // Ensure both departure and return dates are selected
+    if (!dateRange.value.start || !dateRange.value.end) {
+      errorMessage.value = "Bitte wählen Sie sowohl Hin- als auch Rückflug.";
+      return;
+    }
+
+    // Ensure return date is after departure date
+    const departureDate = toDateString(dateRange.value.start);
+    const returnDate = toDateString(dateRange.value.end);
+
+    if (returnDate < departureDate) {
+      errorMessage.value = "Der Rückflug muss nach dem Hinflug stattfinden.";
+      return;
+    }
+  } else {
+    // For one-way trips, ensure a date is selected
+    if (!singleDate.value) {
+      errorMessage.value = "Bitte wählen Sie ein Flugtag.";
+      return;
+    }
+  }
+
+  // Clear any existing error message
+  errorMessage.value = "";
 };
 </script>
 
