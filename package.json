@@ -16,6 +16,7 @@
     "@iconify-json/simple-icons": "^1.2.34",
     "@internationalized/date": "^3.8.0",
     "@nuxt/ui": "^3.1.2",
+    "firebase-admin": "^13.4.0",
     "nuxt": "^3.17.3"
   },
   "devDependencies": {
