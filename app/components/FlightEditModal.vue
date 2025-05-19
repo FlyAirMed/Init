@@ -54,7 +54,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -77,7 +77,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -288,7 +288,8 @@
                 <UButton color="red" variant="ghost" icon="i-heroicons-x-mark" label="Abbrechen" @click="closeModal"
                     class="px-4 py-2" />
                 <UButton color="green" variant="solid" icon="i-heroicons-check" :loading="isLoading"
-                    :label="isEditing ? 'Speichern' : 'Flug erstellen'" @click="saveFlight" class="px-4 py-2" />
+                    :disabled="!isFormValid" :label="isEditing ? 'Speichern' : 'Flug erstellen'" @click="saveFlight"
+                    class="px-4 py-2" />
             </div>
         </template>
     </UModal>
@@ -317,14 +318,74 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const isEditing = computed(() => !!props.flight?.id);
 const isFormValid = computed(() => {
-    return form.origin &&
-        form.destination &&
-        form.date &&
-        form.departureTime &&
-        form.arrivalTime &&
-        form.availableSeats > 0 &&
-        form.prices[PassengerType.ADULT] > 0 &&
-        form.origin !== form.destination;
+    const origin = form.origin?.value || form.origin;
+    const destination = form.destination?.value || form.destination;
+
+    // Debug logging
+    console.log('Form validation check:', {
+        origin,
+        destination,
+        date: form.date,
+        departureTime: form.departureTime,
+        arrivalTime: form.arrivalTime,
+        availableSeats: form.availableSeats,
+        adultPrice: form.prices[PassengerType.ADULT],
+        intermediateStop: form.intermediateStop,
+        showIntermediateStop: showIntermediateStop.value
+    });
+
+    // Basic validation
+    if (!origin || !destination || !form.date || !form.departureTime || !form.arrivalTime) {
+        console.log('Basic fields missing');
+        return false;
+    }
+
+    if (origin === destination) {
+        console.log('Origin and destination are the same');
+        return false;
+    }
+
+    if (!form.availableSeats || form.availableSeats <= 0) {
+        console.log('Invalid available seats');
+        return false;
+    }
+
+    if (!form.prices[PassengerType.ADULT] || form.prices[PassengerType.ADULT] <= 0) {
+        console.log('Invalid adult price');
+        return false;
+    }
+
+    // Validate times
+    if (!validateTimeSequence(form.departureTime, form.arrivalTime)) {
+        console.log('Invalid time sequence for main flight');
+        return false;
+    }
+
+    // Validate intermediate stop if needed
+    if (showIntermediateStop.value) {
+        if (!form.intermediateStop.arrival || !form.intermediateStop.departure) {
+            console.log('Intermediate stop times missing');
+            return false;
+        }
+
+        if (!validateTimeSequence(form.departureTime, form.intermediateStop.arrival)) {
+            console.log('Invalid time sequence for first segment');
+            return false;
+        }
+
+        if (!validateTimeSequence(form.intermediateStop.arrival, form.intermediateStop.departure)) {
+            console.log('Invalid time sequence for intermediate stop');
+            return false;
+        }
+
+        if (!validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)) {
+            console.log('Invalid rest time');
+            return false;
+        }
+    }
+
+    console.log('Form is valid');
+    return true;
 });
 
 // Form state
@@ -354,7 +415,7 @@ const form = reactive({ ...initialFormState });
 // Options for select inputs
 const airportOptions = computed(() => {
     return Object.entries(AIRPORTS).map(([code, airport]) => ({
-        label: `${code} - ${airport.city}`,
+        label: `${code} - ${airport.name}`,
         value: code
     }));
 });
@@ -380,7 +441,34 @@ const statusOptions = [
     }
 ];
 
-// Real-time validation
+// Add new validation functions
+const validateDate = (date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+};
+
+const validateTimeSequence = (departure, arrival) => {
+    if (!departure || !arrival) return true;
+    const [depHours, depMinutes] = departure.split(':').map(Number);
+    const [arrHours, arrMinutes] = arrival.split(':').map(Number);
+    const depTotal = depHours * 60 + depMinutes;
+    const arrTotal = arrHours * 60 + arrMinutes;
+    return arrTotal > depTotal || arrTotal + 24 * 60 > depTotal; // Allow next day
+};
+
+const validateRestTime = (arrival, departure) => {
+    if (!arrival || !departure) return true;
+    const [arrHours, arrMinutes] = arrival.split(':').map(Number);
+    const [depHours, depMinutes] = departure.split(':').map(Number);
+    const arrTotal = arrHours * 60 + arrMinutes;
+    const depTotal = depHours * 60 + depMinutes;
+    const restMinutes = depTotal > arrTotal ? depTotal - arrTotal : depTotal + 24 * 60 - arrTotal;
+    return restMinutes >= 30; // Minimum 30 minutes rest time
+};
+
+// Modify formValidation computed
 const formValidation = computed(() => ({
     origin: {
         valid: !!form.origin,
@@ -395,16 +483,46 @@ const formValidation = computed(() => ({
                 : ''
     },
     date: {
-        valid: !!form.date,
-        message: !form.date ? 'Bitte wählen Sie ein Datum' : ''
+        valid: !!form.date && validateDate(form.date),
+        message: !form.date
+            ? 'Bitte wählen Sie ein Datum'
+            : !validateDate(form.date)
+                ? 'Das Datum darf nicht in der Vergangenheit liegen'
+                : ''
     },
     departureTime: {
         valid: !!form.departureTime,
         message: !form.departureTime ? 'Bitte wählen Sie eine Abflugzeit' : ''
     },
     arrivalTime: {
-        valid: !!form.arrivalTime,
-        message: !form.arrivalTime ? 'Bitte wählen Sie eine Ankunftszeit' : ''
+        valid: !!form.arrivalTime && validateTimeSequence(form.departureTime, form.arrivalTime),
+        message: !form.arrivalTime
+            ? 'Bitte wählen Sie eine Ankunftszeit'
+            : !validateTimeSequence(form.departureTime, form.arrivalTime)
+                ? 'Die Ankunftszeit muss nach der Abflugzeit liegen'
+                : ''
+    },
+    intermediateStop: {
+        arrival: {
+            valid: !showIntermediateStop.value || (!!form.intermediateStop.arrival && validateTimeSequence(form.departureTime, form.intermediateStop.arrival)),
+            message: !form.intermediateStop.arrival
+                ? 'Bitte geben Sie die Ankunftszeit in Athen ein'
+                : !validateTimeSequence(form.departureTime, form.intermediateStop.arrival)
+                    ? 'Die Ankunftszeit in Athen muss nach der Abflugzeit liegen'
+                    : ''
+        },
+        departure: {
+            valid: !showIntermediateStop.value || (!!form.intermediateStop.departure &&
+                validateTimeSequence(form.intermediateStop.arrival, form.intermediateStop.departure) &&
+                validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)),
+            message: !form.intermediateStop.departure
+                ? 'Bitte geben Sie die Abflugzeit von Athen ein'
+                : !validateTimeSequence(form.intermediateStop.arrival, form.intermediateStop.departure)
+                    ? 'Die Abflugzeit von Athen muss nach der Ankunftszeit liegen'
+                    : !validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)
+                        ? 'Die Ruhezeit in Athen muss mindestens 30 Minuten betragen'
+                        : ''
+        }
     },
     prices: {
         adult: {
@@ -419,22 +537,14 @@ const formValidation = computed(() => ({
             valid: form.prices[PassengerType.INFANT] > 0,
             message: form.prices[PassengerType.INFANT] <= 0 ? 'Bitte geben Sie einen gültigen Preis für Säuglinge ein' : ''
         }
-    },
-    intermediateStop: {
-        arrival: {
-            valid: !showIntermediateStop.value || !!form.intermediateStop.arrival,
-            message: !form.intermediateStop.arrival ? 'Bitte geben Sie die Ankunftszeit in Athen ein' : ''
-        },
-        departure: {
-            valid: !showIntermediateStop.value || !!form.intermediateStop.departure,
-            message: !form.intermediateStop.departure ? 'Bitte geben Sie die Abflugzeit von Athen ein' : ''
-        }
     }
 }));
 
 // Add computed property for showing intermediate stop
 const showIntermediateStop = computed(() => {
-    return form.destination.value === 'DAM' && form.origin.value !== 'ATH';
+    const origin = form.origin?.value || form.origin;
+    const destination = form.destination?.value || form.destination;
+    return (destination === 'DAM' && origin !== 'ATH') || (origin === 'DAM' && destination !== 'ATH');
 });
 
 // Function declarations
@@ -511,7 +621,22 @@ const calculateDuration = (departureTime, arrivalTime) => {
 
 // Methods
 const saveFlight = async () => {
-    if (!validateForm()) {
+    console.log('Form validation state:', {
+        isFormValid: isFormValid.value,
+        form: {
+            origin: form.origin?.value || form.origin,
+            destination: form.destination?.value || form.destination,
+            date: form.date,
+            departureTime: form.departureTime,
+            arrivalTime: form.arrivalTime,
+            availableSeats: form.availableSeats,
+            prices: form.prices,
+            intermediateStop: form.intermediateStop
+        }
+    });
+
+    if (!isFormValid.value) {
+        errorMessage.value = 'Bitte füllen Sie alle erforderlichen Felder korrekt aus';
         return;
     }
 
@@ -521,53 +646,110 @@ const saveFlight = async () => {
 
         const dateStr = form.date;
         const segments = [];
+        const origin = form.origin?.value || form.origin;
+        const destination = form.destination?.value || form.destination;
 
         if (showIntermediateStop.value) {
-            // First segment: Origin to ATH
-            const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
-            const arrTime = new Date(`${dateStr}T${form.intermediateStop.arrival}:00.000Z`);
-            segments.push({
-                from: form.origin?.value || form.origin,
-                to: 'ATH',
-                departure: depTime.toISOString(),
-                arrival: arrTime.toISOString(),
-                duration: calculateDuration(form.departureTime, form.intermediateStop.arrival)
-            });
+            if (destination === 'DAM') {
+                // First segment: Origin to ATH
+                const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
+                const arrTime = new Date(`${dateStr}T${form.intermediateStop.arrival}:00.000Z`);
+                segments.push({
+                    from: origin,
+                    to: 'ATH',
+                    departure: depTime.toISOString(),
+                    arrival: arrTime.toISOString(),
+                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival)
+                });
 
-            // Second segment: ATH to DAM
-            const athDepTime = new Date(`${dateStr}T${form.intermediateStop.departure}:00.000Z`);
-            const damArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-            segments.push({
-                from: 'ATH',
-                to: form.destination?.value || form.destination,
-                departure: athDepTime.toISOString(),
-                arrival: damArrTime.toISOString(),
-                duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime)
-            });
+                // Second segment: ATH to DAM
+                const athDepTime = new Date(`${dateStr}T${form.intermediateStop.departure}:00.000Z`);
+                // If arrival time is before departure time, it's the next day
+                let damArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+                if (damArrTime < athDepTime) {
+                    damArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+                    damArrTime.setDate(damArrTime.getDate() + 1);
+                }
+                segments.push({
+                    from: 'ATH',
+                    to: destination,
+                    departure: athDepTime.toISOString(),
+                    arrival: damArrTime.toISOString(),
+                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime)
+                });
+            } else {
+                // First segment: DAM to ATH
+                const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
+                const arrTime = new Date(`${dateStr}T${form.intermediateStop.arrival}:00.000Z`);
+                segments.push({
+                    from: origin,
+                    to: 'ATH',
+                    departure: depTime.toISOString(),
+                    arrival: arrTime.toISOString(),
+                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival)
+                });
+
+                // Second segment: ATH to Destination
+                const athDepTime = new Date(`${dateStr}T${form.intermediateStop.departure}:00.000Z`);
+                let finalArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+                if (finalArrTime < athDepTime) {
+                    finalArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+                    finalArrTime.setDate(finalArrTime.getDate() + 1);
+                }
+                segments.push({
+                    from: 'ATH',
+                    to: destination,
+                    departure: athDepTime.toISOString(),
+                    arrival: finalArrTime.toISOString(),
+                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime)
+                });
+            }
         } else {
             // Direct flight
             const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
-            const arrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+            let arrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+            if (arrTime < depTime) {
+                arrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
+                arrTime.setDate(arrTime.getDate() + 1);
+            }
             segments.push({
-                from: form.origin?.value || form.origin,
-                to: form.destination?.value || form.destination,
+                from: origin,
+                to: destination,
                 departure: depTime.toISOString(),
                 arrival: arrTime.toISOString(),
                 duration: calculateDuration(form.departureTime, form.arrivalTime)
             });
         }
 
+        // Calculate total duration
+        const totalDuration = segments.reduce((total, segment) => {
+            const dep = new Date(segment.departure);
+            const arr = new Date(segment.arrival);
+            return total + (arr - dep);
+        }, 0);
+
         const flightData = {
-            ...form,
-            origin: form.origin?.value || form.origin,
-            destination: form.destination?.value || form.destination,
+            id: form.id,
+            origin: origin,
+            destination: destination,
+            date: dateStr,
+            departureTime: form.departureTime,
+            arrivalTime: form.arrivalTime,
+            duration: formatDuration(totalDuration),
+            availableSeats: Number(form.availableSeats),
             prices: {
                 [PassengerType.ADULT]: Number(form.prices[PassengerType.ADULT]),
                 [PassengerType.CHILD]: Number(form.prices[PassengerType.CHILD]),
                 [PassengerType.INFANT]: Number(form.prices[PassengerType.INFANT]),
             },
-            availableSeats: Number(form.availableSeats),
-            segments
+            status: form.status || FlightStatus.ACTIVE,
+            segments: segments.map(segment => ({
+                ...segment,
+                duration: calculateDuration(
+                    new Date(segment.departure).toTimeString().slice(0, 5),
+                    new Date(segment.arrival).toTimeString().slice(0, 5)
+                )
+            }))
         };
 
         const endpoint = isEditing.value && form.id
@@ -590,70 +772,27 @@ const saveFlight = async () => {
         }
     } catch (error) {
         console.error('Error saving flight:', error);
-        errorMessage.value = 'Fehler beim Speichern des Fluges: ' + error.message;
+        errorMessage.value = 'Fehler beim Speichern des Fluges: ' + (error.message || 'Unbekannter Fehler');
         emits('error', error);
     } finally {
         isLoading.value = false;
     }
 };
 
-const validateForm = () => {
-    if (!form.origin) {
-        errorMessage.value = 'Bitte einen Abflughafen auswählen';
-        return false;
-    }
-
-    if (!form.destination) {
-        errorMessage.value = 'Bitte einen Zielflughafen auswählen';
-        return false;
-    }
-
-    if (form.origin === form.destination) {
-        errorMessage.value = 'Abflug- und Zielflughafen dürfen nicht identisch sein';
-        return false;
-    }
-
-    if (!form.date) {
-        errorMessage.value = 'Bitte ein Datum auswählen';
-        return false;
-    }
-
-    if (!form.departureTime) {
-        errorMessage.value = 'Bitte eine Abflugzeit auswählen';
-        return false;
-    }
-
-    if (!form.arrivalTime) {
-        errorMessage.value = 'Bitte eine Ankunftszeit auswählen';
-        return false;
-    }
-
-    if (!form.availableSeats || form.availableSeats <= 0) {
-        errorMessage.value = 'Bitte eine gültige Anzahl verfügbarer Sitze angeben';
-        return false;
-    }
-
-    if (form.prices[PassengerType.ADULT] <= 0) {
-        errorMessage.value = 'Bitte einen gültigen Preis für Erwachsene angeben';
-        return false;
-    }
-
-    if (showIntermediateStop.value) {
-        if (!form.intermediateStop.arrival) {
-            errorMessage.value = 'Bitte geben Sie die Ankunftszeit in Athen ein';
-            return false;
-        }
-        if (!form.intermediateStop.departure) {
-            errorMessage.value = 'Bitte geben Sie die Abflugzeit von Athen ein';
-            return false;
-        }
-    }
-
-    return true;
+// Add helper function to format duration
+const formatDuration = (milliseconds) => {
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}min`;
 };
 
 const closeModal = () => {
     isOpen.value = false;
     resetForm();
 };
+
+// Add watch for form changes
+watch(() => form, () => {
+    console.log('Form changed, validation state:', isFormValid.value);
+}, { deep: true });
 </script>

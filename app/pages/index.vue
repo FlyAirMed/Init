@@ -141,66 +141,34 @@
                     Keine Flüge zwischen diesen Städten gefunden.
                   </div>
 
-                  <!-- Available dates display -->
+                  <!-- Calendar for available dates -->
                   <div v-else>
                     <h3 class="text-lg font-semibold mb-3">{{ tripType === TripType.ROUND_TRIP ? 'Hinflug wählen' :
                       'Flugtag wählen' }}</h3>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-4">
-                      <button v-for="dateInfo in availableDates" :key="dateInfo.date"
-                        @click="selectFlightDate(dateInfo.date)" :class="[
-                          'p-2 rounded-lg border flex flex-col items-center transition-colors',
-                          (tripType === TripType.ROUND_TRIP && toDateString(dateRange.start) === dateInfo.date) ||
-                            (tripType === TripType.ONE_WAY && toDateString(singleDate) === dateInfo.date)
-                            ? 'bg-blue-600 text-white border-blue-700'
-                            : 'bg-white hover:bg-blue-50 border-gray-200'
-                        ]">
-                        <span class="text-sm font-semibold">{{ formatDateShort(dateInfo.date) }}</span>
-                        <span class="text-xs" :class="{ 'text-blue-100': isDateSelected(dateInfo.date) }">{{
-                          dateInfo.price }}€</span>
-                        <span class="text-xs" :class="{ 'text-blue-100': isDateSelected(dateInfo.date) }">
-                          {{ dateInfo.availableSeats }} Plätze
-                        </span>
-                      </button>
-                    </div>
+                    <UCalendar :model-value="tripType === TripType.ROUND_TRIP ? dateRange : singleDate"
+                      @update:model-value="(val) => tripType === TripType.ROUND_TRIP ? dateRange = val : singleDate = val"
+                      :is-date-disabled="isDateDisabled" :range="tripType === TripType.ROUND_TRIP" :min-value="today"
+                      class="w-full">
+                      <template #day="{ day }">
+                        <span>{{ day.day }}</span>
+                      </template>
+                    </UCalendar>
 
                     <!-- Return flight selection for round trips -->
-                    <div v-if="tripType === TripType.ROUND_TRIP && availableReturnDates.length > 0">
-                      <h3 class="text-lg font-semibold mt-4 mb-3">Rückflug wählen</h3>
+                    <div v-if="tripType === TripType.ROUND_TRIP && availableReturnDates.length > 0" class="mt-6">
+                      <h3 class="text-lg font-semibold mb-3">Rückflug wählen</h3>
 
-                      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                        <button v-for="dateInfo in availableReturnDates" :key="dateInfo.date"
-                          @click="selectReturnDate(dateInfo.date)" :class="[
-                            'p-2 rounded-lg border flex flex-col items-center transition-colors',
-                            toDateString(dateRange.end) === dateInfo.date
-                              ? 'bg-blue-600 text-white border-blue-700'
-                              : 'bg-white hover:bg-blue-50 border-gray-200'
-                          ]">
-                          <span class="text-sm font-semibold">{{ formatDateShort(dateInfo.date) }}</span>
-                          <span class="text-xs"
-                            :class="{ 'text-blue-100': toDateString(dateRange.end) === dateInfo.date }">{{
-                              dateInfo.price }}€</span>
-                          <span class="text-xs"
-                            :class="{ 'text-blue-100': toDateString(dateRange.end) === dateInfo.date }">
-                            {{ dateInfo.availableSeats }} Plätze
-                          </span>
-                        </button>
-                      </div>
+                      <UCalendar :model-value="dateRange" @update:model-value="(val) => dateRange = val"
+                        :is-date-disabled="isReturnDateDisabled" range :min-value="dateRange.start" class="w-full">
+                        <template #day="{ day }">
+                          <span>{{ day.day }}</span>
+                        </template>
+                      </UCalendar>divdiv
                     </div>
                   </div>
 
-                  <div class="mt-4 sm:mt-5 flex justify-between">
-                    <button @click="refreshAvailableDates"
-                      class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]">
-                      <span class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Aktualisieren
-                      </span>
-                    </button>
+                  <div class="mt-4 sm:mt-5 flex justify-end">
                     <button @click="confirmDateSelection"
                       class="px-4 sm:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]">
                       Auswählen
@@ -268,7 +236,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.adults
-                          }}</span>
+                        }}</span>
                         <button @click="
                           incrementPassenger(
                             'adults'
@@ -311,7 +279,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.children
-                          }}</span>
+                        }}</span>
                         <button @click="
                           incrementPassenger(
                             'children'
@@ -354,7 +322,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.infants
-                          }}</span>
+                        }}</span>
                         <button @click="
                           incrementPassenger(
                             'infants'
@@ -698,64 +666,6 @@ const handleBooking = async () => {
   }
 };
 
-// Additional functions for the date formatter
-const formatDateShort = (dateString) => {
-  if (!dateString) return "";
-
-  const [year, month, day] = dateString.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-
-  const dayNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-  const dayName = dayNames[date.getDay()];
-  const dayNum = day.toString().padStart(2, '0');
-  const monthNum = month.toString().padStart(2, '0');
-
-  return `${dayName} ${dayNum}.${monthNum}`;
-};
-
-// Check if a date is selected
-const isDateSelected = (dateString) => {
-  if (tripType.value === TripType.ROUND_TRIP) {
-    return toDateString(dateRange.value.start) === dateString;
-  } else {
-    return toDateString(singleDate.value) === dateString;
-  }
-};
-
-// Function to select a flight date
-const selectFlightDate = (dateString) => {
-  const calendarDate = toCalendarDate(dateString);
-
-  if (tripType.value === TripType.ROUND_TRIP) {
-    dateRange.value.start = calendarDate;
-    // Update return date options based on new departure date
-    fetchReturnDates(calendarDate);
-  } else {
-    singleDate.value = calendarDate;
-  }
-};
-
-// Function to select a return date
-const selectReturnDate = (dateString) => {
-  if (tripType.value === TripType.ROUND_TRIP) {
-    dateRange.value.end = toCalendarDate(dateString);
-  }
-};
-
-// Function to refresh available dates
-const refreshAvailableDates = async () => {
-  if (departure.value && arrival.value) {
-    errorMessage.value = "";
-    await fetchAvailableDates();
-
-    if (tripType.value === TripType.ROUND_TRIP && dateRange.value.start) {
-      await fetchReturnDates(dateRange.value.start);
-    }
-  } else {
-    errorMessage.value = "Bitte wählen Sie zuerst Abflug- und Zielort.";
-  }
-};
-
 // Function to confirm date selection
 const confirmDateSelection = () => {
   // Close the date picker
@@ -787,6 +697,17 @@ const confirmDateSelection = () => {
 
   // Clear any existing error message
   errorMessage.value = "";
+};
+
+// Add these new functions in the script section
+const isDateDisabled = (date) => {
+  const dateStr = toDateString(date);
+  return !availableDates.value.some(d => d.date === dateStr);
+};
+
+const isReturnDateDisabled = (date) => {
+  const dateStr = toDateString(date);
+  return !availableReturnDates.value.some(d => d.date === dateStr);
 };
 </script>
 
