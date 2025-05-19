@@ -135,7 +135,7 @@
                 <p class="text-gray-600 mb-6">
                     Sind Sie sicher, dass Sie den Flug von <strong>{{ flightToDelete?.origin }}</strong> nach
                     <strong>{{ flightToDelete?.destination }}</strong> am <strong>{{ formatDate(flightToDelete?.date)
-                        }}</strong> löschen möchten?
+                    }}</strong> löschen möchten?
                 </p>
                 <div class="flex justify-end space-x-3">
                     <button @click="showDeleteModal = false"
@@ -169,7 +169,7 @@ const showDeleteModal = ref(false);
 const flightToDelete = ref(null);
 const searchQuery = ref('');
 const statusFilter = ref('');
-const showFlightModal = ref(false);
+const showFlightModal = ref(true); // todo: set to false initially
 const currentFlight = ref(null);
 
 // Computed

@@ -453,7 +453,6 @@ const passengers = reactive({
   [PassengerType.ADULT]: 1,
   [PassengerType.CHILD]: 0,
   [PassengerType.INFANT]: 0,
-  [PassengerType.SENIOR]: 0
 });
 
 const totalPassengers = computed(() => {

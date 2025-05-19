@@ -1,8 +1,16 @@
 <template>
-    <UModal v-model:open="isOpen" :ui="{ width: 'max-w-5xl' }">
+    <UModal v-model:open="isOpen" class="max-w-[90vw] w-[1200px]">
         <template #header>
             <div class="flex justify-between items-center">
-                <h3 class="text-xl font-semibold">{{ isEditing ? 'Flug bearbeiten' : 'Neuen Flug hinzufügen' }}</h3>
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 text-blue-600 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold">{{ isEditing ? 'Flug bearbeiten' : 'Neuen Flug hinzufügen' }}</h3>
+                </div>
             </div>
         </template>
 
@@ -12,108 +20,96 @@
                 {{ errorMessage }}
             </UAlert>
 
-            <!-- Form content -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Origin Airport -->
-                <UFormGroup label="Abflughafen">
-                    <USelectMenu v-model="form.origin" :items="airportOptions" placeholder="Bitte wählen" />
-                </UFormGroup>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Flight Details Section -->
+                <div class="p-6 bg-gray-50 rounded-xl">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Flugdetails</h3>
 
-                <!-- Destination Airport -->
-                <UFormGroup label="Zielflughafen">
-                    <USelectMenu v-model="form.destination" :items="airportOptions" placeholder="Bitte wählen" />
-                </UFormGroup>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="grid gap-6">
+                            <!-- Origin and Destination -->
+                            <div class="grid grid-cols-1 gap-4">
+                                <UFormGroup label="Abflughafen" class="text-base">
+                                    <USelectMenu v-model="form.origin" :items="airportOptions" placeholder="Bitte wählen"
+                                        icon="i-heroicons-map-pin" class="h-12 text-base" />
+                                </UFormGroup>
 
-                <!-- Flight Date -->
-                <UFormGroup label="Datum">
-                    <UInput v-model="form.date" type="date" />
-                </UFormGroup>
+                                <UFormGroup label="Zielflughafen" class="text-base">
+                                    <USelectMenu v-model="form.destination" :items="airportOptions"
+                                        placeholder="Bitte wählen" icon="i-heroicons-map-pin" class="h-12 text-base" />
+                                </UFormGroup>
+                            </div>
 
-                <!-- Available Seats -->
-                <UFormGroup label="Verfügbare Sitze">
-                    <UInput v-model="form.availableSeats" type="number" min="0" max="500" />
-                </UFormGroup>
+                            <!-- Flight Date and Available Seats -->
+                            <div class="flex flex-wrap gap-4">
+                                <div class="flex-1 min-w-[200px]">
+                                    <UFormGroup label="Datum" class="text-base">
+                                        <UInput v-model="form.date" type="date" icon="i-heroicons-calendar" 
+                                            class="h-12 text-base" size="lg" />
+                                    </UFormGroup>
+                                </div>
 
-                <!-- Status -->
-                <UFormGroup label="Status">
-                    <USelectMenu v-model="form.status" :items="statusOptions" />
-                </UFormGroup>
-            </div>
+                                <div class="flex-1 min-w-[200px]">
+                                    <UFormGroup label="Verfügbare Sitze" class="text-base">
+                                        <UInput v-model="form.availableSeats" type="number" min="0" max="500"
+                                            icon="i-heroicons-user-group" class="h-12 text-base" size="lg" />
+                                    </UFormGroup>
+                                </div>
 
-            <!-- Flight Segments -->
-            <div class="mt-4">
-                <h3 class="text-lg font-medium text-gray-800 mb-2">Flugsegmente</h3>
-
-                <div v-for="(segment, index) in form.segments" :key="index" class="p-3 bg-gray-50 rounded-md mb-3">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <UFormGroup label="Von">
-                            <UInput v-model="segment.from" />
-                        </UFormGroup>
-
-                        <UFormGroup label="Nach">
-                            <UInput v-model="segment.to" />
-                        </UFormGroup>
-
-                        <UFormGroup label="Abflugzeit">
-                            <UInput v-model="segment.departure" type="datetime-local" />
-                        </UFormGroup>
-
-                        <UFormGroup label="Ankunftszeit">
-                            <UInput v-model="segment.arrival" type="datetime-local" />
-                        </UFormGroup>
-                    </div>
-
-                    <div class="flex justify-end mt-2">
-                        <UButton color="red" variant="soft" @click="removeSegment(index)" icon="i-heroicons-trash">
-                            Segment entfernen
-                        </UButton>
+                                <div class="flex-1 min-w-[200px]">
+                                    <UFormGroup label="Status" class="text-base">
+                                        <USelectMenu v-model="form.status" :items="statusOptions" 
+                                            icon="i-heroicons-tag" class="h-12 text-base" size="lg" />
+                            </UFormGroup>
+                        </div>
                     </div>
                 </div>
 
-                <UButton @click="addSegment" variant="soft" color="gray" icon="i-heroicons-plus" class="mt-2">
-                    Segment hinzufügen
-                </UButton>
-            </div>
+                <!-- Prices Section -->
+                <div class="p-6 bg-gray-50 rounded-xl">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Preise</h3>
 
-            <!-- Prices -->
-            <div class="mt-4">
-                <h3 class="text-lg font-medium text-gray-800 mb-2">Preise</h3>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="grid gap-6">
+                            <!-- Adult Price -->
+                            <UFormGroup label="Preis für Erwachsene" class="text-base">
+                                <UInput v-model="form.prices.adult" type="number" min="0" step="0.01" class="h-12 text-base">
+                                    <template #prefix>
+                                        <span class="text-gray-500 text-base">€</span>
+                                    </template>
+                                </UInput>
+                            </UFormGroup>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <UFormGroup label="Erwachsene">
-                        <UInputGroup v-model="form.prices.adult" type="number" min="0" step="0.01">
-                            <template #prefix>
-                                <span class="text-gray-500">€</span>
-                            </template>
-                        </UInputGroup>
-                    </UFormGroup>
+                            <!-- Child Price -->
+                            <UFormGroup label="Preis für Kinder" class="text-base">
+                                <UInput v-model="form.prices.child" type="number" min="0" step="0.01" class="h-12 text-base">
+                                    <template #prefix>
+                                        <span class="text-gray-500 text-base">€</span>
+                                    </template>
+                                </UInput>
+                            </UFormGroup>
 
-                    <UFormGroup label="Kinder">
-                        <UInputGroup v-model="form.prices.child" type="number" min="0" step="0.01">
-                            <template #prefix>
-                                <span class="text-gray-500">€</span>
-                            </template>
-                        </UInputGroup>
-                    </UFormGroup>
-
-                    <UFormGroup label="Kleinkinder">
-                        <UInputGroup v-model="form.prices.infant" type="number" min="0" step="0.01">
-                            <template #prefix>
-                                <span class="text-gray-500">€</span>
-                            </template>
-                        </UInputGroup>
-                    </UFormGroup>
+                            <!-- Infant Price -->
+                            <UFormGroup label="Preis für Kleinkinder" class="text-base">
+                                <UInput v-model="form.prices.infant" type="number" min="0" step="0.01" class="h-12 text-base">
+                                    <template #prefix>
+                                        <span class="text-gray-500 text-base">€</span>
+                                    </template>
+                                </UInput>
+                            </UFormGroup>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
 
         <template #footer>
-            <div class="flex justify-end gap-2">
-                <UButton @click="closeModal" color="gray" variant="soft">
+            <div class="flex justify-end gap-3">
+                <UButton @click="closeModal" color="gray" variant="soft" icon="i-heroicons-x-mark">
                     Abbrechen
                 </UButton>
-                <UButton @click="saveFlight" color="primary" :loading="isLoading">
-                    {{ isEditing ? 'Aktualisieren' : 'Speichern' }}
+                <UButton @click="saveFlight" color="primary" :loading="isLoading" icon="i-heroicons-check">
+                    {{ isEditing ? 'Flug aktualisieren' : 'Flug speichern' }}
                 </UButton>
             </div>
         </template>
@@ -149,12 +145,10 @@ const initialFormState = {
     destination: '',
     date: '',
     availableSeats: 150,
-    segments: [],
     prices: {
         [PassengerType.ADULT]: 0,
         [PassengerType.CHILD]: 0,
         [PassengerType.INFANT]: 0,
-        [PassengerType.SENIOR]: 0 // Keep it for API compatibility
     },
     status: FlightStatus.ACTIVE
 };
@@ -178,29 +172,13 @@ const statusOptions = [
 // Function declarations
 const resetForm = () => {
     Object.assign(form, initialFormState);
-    form.segments = [];
     form.prices = {
         [PassengerType.ADULT]: 0,
         [PassengerType.CHILD]: 0,
         [PassengerType.INFANT]: 0,
-        [PassengerType.SENIOR]: 0 // Keep it for API compatibility
     };
     delete form.id;
     errorMessage.value = '';
-};
-
-const addSegment = () => {
-    form.segments.push({
-        from: form.origin,
-        to: form.destination,
-        departure: '',
-        arrival: '',
-        duration: ''
-    });
-};
-
-const removeSegment = (index) => {
-    form.segments.splice(index, 1);
 };
 
 // Initialize form when flight changes
@@ -212,14 +190,11 @@ watch(() => props.flight, (newFlight) => {
         form.date = newFlight.date;
         form.availableSeats = newFlight.availableSeats;
         form.status = newFlight.status;
-
-        // Deep clone segments and prices
-        form.segments = JSON.parse(JSON.stringify(newFlight.segments));
+        
         form.prices = {
             [PassengerType.ADULT]: newFlight.prices[PassengerType.ADULT] || 0,
             [PassengerType.CHILD]: newFlight.prices[PassengerType.CHILD] || 0,
             [PassengerType.INFANT]: newFlight.prices[PassengerType.INFANT] || 0,
-            [PassengerType.SENIOR]: newFlight.prices[PassengerType.SENIOR] || 0 // Keep it for API compatibility
         };
     } else {
         resetForm();
@@ -228,7 +203,6 @@ watch(() => props.flight, (newFlight) => {
 
 // Methods
 const saveFlight = async () => {
-    // Validate form
     if (!validateForm()) {
         return;
     }
@@ -239,12 +213,10 @@ const saveFlight = async () => {
 
         const flightData = {
             ...form,
-            // Ensure prices are numbers
             prices: {
                 [PassengerType.ADULT]: Number(form.prices[PassengerType.ADULT]),
                 [PassengerType.CHILD]: Number(form.prices[PassengerType.CHILD]),
                 [PassengerType.INFANT]: Number(form.prices[PassengerType.INFANT]),
-                [PassengerType.SENIOR]: Number(form.prices[PassengerType.ADULT]) // Use adult price for seniors
             },
             availableSeats: Number(form.availableSeats)
         };
@@ -302,26 +274,6 @@ const validateForm = () => {
         return false;
     }
 
-    if (form.segments.length === 0) {
-        errorMessage.value = 'Bitte mindestens ein Flugsegment hinzufügen';
-        return false;
-    }
-
-    // Validate each segment
-    for (const segment of form.segments) {
-        if (!segment.from || !segment.to || !segment.departure || !segment.arrival) {
-            errorMessage.value = 'Bitte alle Felder für jedes Flugsegment ausfüllen';
-            return false;
-        }
-
-        // Check if arrival is after departure
-        if (new Date(segment.arrival) <= new Date(segment.departure)) {
-            errorMessage.value = 'Die Ankunftszeit muss nach der Abflugzeit liegen';
-            return false;
-        }
-    }
-
-    // Validate prices
     if (form.prices[PassengerType.ADULT] <= 0) {
         errorMessage.value = 'Bitte einen gültigen Preis für Erwachsene angeben';
         return false;

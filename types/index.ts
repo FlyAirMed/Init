@@ -13,7 +13,6 @@ export enum PassengerType {
   ADULT = 'adult',
   CHILD = 'child',
   INFANT = 'infant',
-  SENIOR = 'senior',
 }
 
 export interface FlightSegment {
@@ -28,7 +27,6 @@ export interface FlightPrices {
   [PassengerType.ADULT]: number;
   [PassengerType.CHILD]: number;
   [PassengerType.INFANT]: number;
-  [PassengerType.SENIOR]: number;
 }
 
 export interface Flight {
