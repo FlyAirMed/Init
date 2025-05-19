@@ -354,7 +354,7 @@ const form = reactive({ ...initialFormState });
 // Options for select inputs
 const airportOptions = computed(() => {
     return Object.entries(AIRPORTS).map(([code, airport]) => ({
-        label: `${code} - ${airport.name}`,
+        label: `${code} - ${airport.city}`,
         value: code
     }));
 });
@@ -434,7 +434,7 @@ const formValidation = computed(() => ({
 
 // Add computed property for showing intermediate stop
 const showIntermediateStop = computed(() => {
-    return form.destination === 'DAM' && form.origin !== 'ATH' && form.origin !== 'VIE';
+    return form.destination.value === 'DAM' && form.origin.value !== 'ATH';
 });
 
 // Function declarations
@@ -457,8 +457,8 @@ const resetForm = () => {
 watch(() => props.flight, (newFlight) => {
     if (newFlight) {
         form.id = newFlight.id;
-        form.origin = newFlight.origin;
-        form.destination = newFlight.destination;
+        form.origin = newFlight.origin?.value || newFlight.origin;
+        form.destination = newFlight.destination?.value || newFlight.destination;
         form.date = newFlight.date;
         form.availableSeats = newFlight.availableSeats;
         form.status = newFlight.status;
@@ -527,7 +527,7 @@ const saveFlight = async () => {
             const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
             const arrTime = new Date(`${dateStr}T${form.intermediateStop.arrival}:00.000Z`);
             segments.push({
-                from: form.origin,
+                from: form.origin?.value || form.origin,
                 to: 'ATH',
                 departure: depTime.toISOString(),
                 arrival: arrTime.toISOString(),
@@ -539,7 +539,7 @@ const saveFlight = async () => {
             const damArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
             segments.push({
                 from: 'ATH',
-                to: form.destination,
+                to: form.destination?.value || form.destination,
                 departure: athDepTime.toISOString(),
                 arrival: damArrTime.toISOString(),
                 duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime)
@@ -549,8 +549,8 @@ const saveFlight = async () => {
             const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
             const arrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
             segments.push({
-                from: form.origin,
-                to: form.destination,
+                from: form.origin?.value || form.origin,
+                to: form.destination?.value || form.destination,
                 departure: depTime.toISOString(),
                 arrival: arrTime.toISOString(),
                 duration: calculateDuration(form.departureTime, form.arrivalTime)
@@ -559,6 +559,8 @@ const saveFlight = async () => {
 
         const flightData = {
             ...form,
+            origin: form.origin?.value || form.origin,
+            destination: form.destination?.value || form.destination,
             prices: {
                 [PassengerType.ADULT]: Number(form.prices[PassengerType.ADULT]),
                 [PassengerType.CHILD]: Number(form.prices[PassengerType.CHILD]),
