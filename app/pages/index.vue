@@ -418,13 +418,13 @@ const isSearchingFlights = ref(false);
 const isSearchingDates = ref(false);
 
 const passengers = reactive({
-  [PassengerType.ADULT]: 1,
-  [PassengerType.CHILD]: 0,
-  [PassengerType.INFANT]: 0,
+  adults: 1,
+  children: 0,
+  infants: 0,
 });
 
 const totalPassengers = computed(() => {
-  return Object.values(passengers).reduce((sum, count) => sum + count, 0);
+  return passengers.adults + passengers.children + passengers.infants;
 });
 
 const formatDate = (calendarDate) => {
@@ -476,15 +476,18 @@ const togglePassengersDropdown = () => {
 
 const incrementPassenger = (type) => {
   if (totalPassengers.value < 9) {
+    if (type === 'infants' && passengers.infants >= passengers.adults) {
+      return;
+    }
     passengers[type]++;
   }
 };
 
 const decrementPassenger = (type) => {
-  if (
-    passengers[type] > 0 &&
-    (type !== PassengerType.ADULT || passengers[type] > 1)
-  ) {
+  if (type === 'adults' && passengers.adults <= 1) {
+    return;
+  }
+  if (passengers[type] > 0) {
     passengers[type]--;
   }
 };
@@ -629,7 +632,11 @@ const handleBooking = async () => {
       origin: departure.value,
       destination: arrival.value,
       tripType: tripType.value,
-      passengers: { ...passengers }
+      passengers: {
+        adults: passengers.adults,
+        children: passengers.children,
+        infants: passengers.infants
+      }
     };
 
     // Add date parameters based on trip type

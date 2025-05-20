@@ -135,7 +135,7 @@
                 <p class="text-gray-600 mb-6">
                     Sind Sie sicher, dass Sie den Flug von <strong>{{ flightToDelete?.origin }}</strong> nach
                     <strong>{{ flightToDelete?.destination }}</strong> am <strong>{{ formatDate(flightToDelete?.date)
-                    }}</strong> löschen möchten?
+                        }}</strong> löschen möchten?
                 </p>
                 <div class="flex justify-end space-x-3">
                     <button @click="showDeleteModal = false"
