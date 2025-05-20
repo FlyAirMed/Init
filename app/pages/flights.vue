@@ -183,7 +183,7 @@
 
                                 <!-- Booking Button -->
                                 <div class="mt-6 flex justify-end">
-                                    <UButton color="blue" size="lg" class="px-8" @click="activeStep = 1">
+                                    <UButton color="blue" size="lg" class="px-8" @click="selectFlight(flight)">
                                         Weiter zur Passagierinformationen
                                         <template #trailing>
                                             <UIcon name="i-heroicons-arrow-right" class="h-5 w-5" />
@@ -206,7 +206,13 @@
                                 <h2 class="text-xl font-semibold text-gray-800">Zahlungsinformationen</h2>
                             </div>
                         </template>
-                        <!-- Add payment form here -->
+                        <PaymentForm :amount="calculateTotalPrice(selectedFlight)" currency="eur" :booking-details="{
+                            flightNumber: selectedFlight?.id,
+                            from: AIRPORTS[selectedFlight?.origin]?.name,
+                            to: AIRPORTS[selectedFlight?.destination]?.name,
+                            date: formatDate(selectedFlight?.date),
+                            price: calculateTotalPrice(selectedFlight)
+                        }" @success="handlePaymentSuccess" @error="handlePaymentError" />
                     </UCard>
                 </div>
                 <div v-else-if="activeStep === 3" class="w-full max-w-4xl">
@@ -230,11 +236,13 @@
 import { ref, onMounted } from 'vue';
 import { AIRPORTS } from '../../types';
 import PassengerStep from '../components/PassengerStep.vue';
+import PaymentForm from '../components/PaymentForm.vue';
 
 const flights = ref([]);
 const searchParams = ref(null);
 const activeStep = ref(0);
 const passengerStepRef = ref(null);
+const selectedFlight = ref(null);
 
 // Form data
 const contactPerson = ref({
@@ -323,14 +331,46 @@ const formatSegmentTime = (dateString) => {
 
 // Calculate total price for a flight
 const calculateTotalPrice = (flight) => {
-    if (!searchParams.value) return flight.prices.adult;
+    if (!flight || !flight.prices) return 0;
+    if (!searchParams.value) return flight.prices.adult || 0;
 
-    const { adults, children, infants } = searchParams.value.passengers;
+    const { adults = 1, children = 0, infants = 0 } = searchParams.value.passengers || {};
     return (
         (flight.prices.adult * adults) +
         (flight.prices.child * children) +
         (flight.prices.infant * infants)
     );
+};
+
+const handlePaymentSuccess = () => {
+    // Zeige Erfolgsmeldung
+    toast.add({
+        title: 'Zahlung erfolgreich',
+        description: 'Vielen Dank für Ihre Buchung! Sie erhalten in Kürze eine Bestätigung per E-Mail.',
+        color: 'green',
+        icon: 'i-heroicons-check-circle',
+        timeout: 5000
+    });
+
+    // Optional: Weiterleitung zur Bestätigungsseite
+    // navigateTo('/booking-confirmation');
+};
+
+const handlePaymentError = (error) => {
+    // Zeige Fehlermeldung
+    toast.add({
+        title: 'Zahlung fehlgeschlagen',
+        description: error.message || 'Bitte versuchen Sie es später erneut.',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-circle',
+        timeout: 5000
+    });
+};
+
+// Add flight selection handler
+const selectFlight = (flight) => {
+    selectedFlight.value = flight;
+    handleNextStep();
 };
 
 onMounted(async () => {

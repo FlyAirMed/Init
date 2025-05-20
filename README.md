@@ -1,75 +1,104 @@
-# Nuxt UI Starter
+# Flight Booking System with Stripe Payments
 
-Look at [Nuxt docs](https://nuxt.com/docs/getting-started/introduction) and [Nuxt UI docs](https://ui.nuxt.com) to learn more.
+This is a Nuxt 3 application that implements a flight booking system with Stripe payments, email notifications, and booking management.
+
+## Features
+
+- ✅ Stripe payment integration
+- 📧 Email notifications for order confirmations
+- ✈️ Flight booking management
+- 🎨 Modern and responsive UI
+- 🔒 Secure payment processing
+- 📱 Mobile-friendly design
+
+## Prerequisites
+
+- Node.js 16.x or later
+- npm or yarn
+- Stripe account
+- SMTP server for email notifications
 
 ## Setup
 
-Make sure to install the dependencies:
+1. Clone the repository:
 
 ```bash
-# npm
+git clone <repository-url>
+cd <repository-name>
+```
+
+2. Install dependencies:
+
+```bash
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+3. Create a `.env` file in the root directory with the following variables:
 
-Start the development server on `http://localhost:3000`:
+```env
+# Stripe Configuration
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# Email Configuration
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_email@example.com
+SMTP_PASSWORD=your_email_password
+ADMIN_EMAIL=admin@example.com
+
+# Application Configuration
+APP_URL=http://localhost:3000
+```
+
+4. Start the development server:
 
 ```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+## Stripe Webhook Setup
 
-Build the application for production:
+1. Install the Stripe CLI
+2. Run the following command to forward webhooks to your local server:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+stripe listen --forward-to localhost:3000/api/payment/webhook
 ```
 
-Locally preview production build:
+## Usage
 
-```bash
-# npm
-npm run preview
+1. Navigate to the checkout page
+2. Enter your email address
+3. Enter your payment details
+4. Submit the payment
+5. Receive confirmation email
+6. Booking will be processed automatically
 
-# pnpm
-pnpm run preview
+## Development
 
-# yarn
-yarn preview
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run linter
+- `npm run test` - Run tests
 
-# bun
-bun run preview
-```
+## Security
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- All sensitive data is stored in environment variables
+- Stripe handles all payment processing
+- SMTP credentials are secured
+- Webhook signatures are verified
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
