@@ -4,11 +4,64 @@ import { getDb } from '../../utils/firebase-admin';
 const config = useRuntimeConfig();
 
 const stripe = new Stripe(config.stripeSecretKey!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-04-30.basil',
 });
 
+interface CalendarDate {
+  calendar: {
+    identifier: string;
+  };
+  era: string;
+  year: number;
+  month: number;
+  day: number;
+}
+
+interface Address {
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
+interface ContactPerson {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: CalendarDate;
+  address: Address;
+}
+
+interface AdditionalPassenger {
+  firstName: string;
+  lastName: string;
+  birthDate: CalendarDate;
+  type: 'adult' | 'child' | 'infant';
+}
+
+interface PaymentRequest {
+  amount: number;
+  currency: string;
+  description: string;
+  metadata: {
+    flightId: string;
+    from: string;
+    to: string;
+    date: string;
+    passengers_adults: string;
+    passengers_children: string;
+    passengers_infants: string;
+    price_adult: string;
+    price_child: string;
+    price_infant: string;
+  };
+  contactPerson: ContactPerson;
+  additionalPassengers: AdditionalPassenger[];
+}
+
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
+  const body = await readBody<PaymentRequest>(event);
   const { 
     amount,
     currency,
@@ -19,12 +72,54 @@ export default defineEventHandler(async (event) => {
   } = body;
 
   try {
-    // Speichere die Buchung in Firestore
+    // Überprüfe die Flug-ID und hole Flugdaten
     const db = getDb();
+    const flightRef = db.collection('flights').doc(metadata.flightId);
+    const flightDoc = await flightRef.get();
+
+    if (!flightDoc.exists) {
+      throw createError({
+        statusCode: 404,
+        message: 'Flug nicht gefunden'
+      });
+    }
+
+    const flightData = flightDoc.data();
+    
+    // Überprüfe die Preise
+    const expectedAmount = (
+      Number(metadata.price_adult) * Number(metadata.passengers_adults) +
+      Number(metadata.price_child) * Number(metadata.passengers_children) +
+      Number(metadata.price_infant) * Number(metadata.passengers_infants)
+    );
+
+    if (amount !== expectedAmount) {
+      throw createError({
+        statusCode: 400,
+        message: 'Ungültiger Gesamtpreis'
+      });
+    }
+
+    // Überprüfe die Passagieranzahl
+    const totalPassengers = additionalPassengers.length + 1; // +1 für Kontaktperson
+    const expectedPassengers = 
+      Number(metadata.passengers_adults) + 
+      Number(metadata.passengers_children) + 
+      Number(metadata.passengers_infants);
+
+    if (totalPassengers !== expectedPassengers) {
+      throw createError({
+        statusCode: 400,
+        message: 'Ungültige Anzahl von Passagieren'
+      });
+    }
+
+    // Speichere die Buchung in Firestore
     const bookingsRef = db.collection('bookings');
 
     const bookingData = {
       flightId: metadata.flightId,
+      flightData: flightData, // Speichere auch die Flugdaten
       contactPerson: {
         firstName: contactPerson.firstName,
         lastName: contactPerson.lastName,
@@ -33,10 +128,11 @@ export default defineEventHandler(async (event) => {
         birthDate: contactPerson.birthDate,
         address: contactPerson.address
       },
-      additionalPassengers: additionalPassengers.map((passenger: any) => ({
+      additionalPassengers: additionalPassengers.map((passenger) => ({
         firstName: passenger.firstName,
         lastName: passenger.lastName,
-        birthDate: passenger.birthDate
+        birthDate: passenger.birthDate,
+        type: passenger.type
       })),
       amount: amount,
       metadata,
@@ -64,19 +160,20 @@ export default defineEventHandler(async (event) => {
         },
       ],
       mode: 'payment',
-      success_url: `${config.public.baseUrl}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${config.public.baseUrl}/booking/cancel`,
+      success_url: `${config.public.baseUrl}/booking/success`,
+      cancel_url: `${config.public.baseUrl}/`,
       metadata: {
-        bookingId: docRef.id
+        bookingId: docRef.id,
+        flightId: metadata.flightId
       }
     });
 
     return { url: session.url };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating payment link:', error);
     throw createError({
-      statusCode: 500,
-      message: error.message
+      statusCode: error.statusCode || 500,
+      message: error instanceof Error ? error.message : 'Unknown error occurred'
     });
   }
 }); 

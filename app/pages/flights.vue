@@ -91,7 +91,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-base font-semibold text-gray-700">{{ segment.duration
-                                                    }}
+                                                }}
                                                 </div>
                                             </div>
 
@@ -181,7 +181,9 @@
                                 <div v-if="activeStep === 1" class="w-full max-w-4xl">
                                     <PassengerStep :total-adults="searchParams?.passengers?.adults || 1"
                                         :total-children="searchParams?.passengers?.children || 0"
-                                        :total-infants="searchParams?.passengers?.infants || 0" />
+                                        :total-infants="searchParams?.passengers?.infants || 0"
+                                        @update:passengers="handlePassengerData"
+                                        @form-valid="handlePassengerFormValid" />
                                 </div>
 
                                 <!-- Booking Button -->
@@ -193,7 +195,8 @@
                                         </template>
                                         Zurück zur Flugauswahl
                                     </UButton>
-                                    <UButton size="lg" class="px-8" @click="nextStep()">
+                                    <UButton size="lg" class="px-8" @click="nextStep()"
+                                        :disabled="activeStep === 1 && !isPassengerFormValid">
                                         Weiter
                                         <template #trailing>
                                             <UIcon name="fluent-emoji-high-contrast:airplane-departure"
@@ -221,7 +224,9 @@
                             date: formatDate(selectedFlight?.date),
                             prices: selectedFlight?.prices,
                             passengers: searchParams?.passengers
-                        }" @success="handlePaymentSuccess" @error="handlePaymentError" />
+                        }" :contact-person="passengerData?.contactPerson"
+                            :additional-passengers="passengerData?.additionalPassengers" @success="handlePaymentSuccess"
+                            @error="handlePaymentError" />
                     </UCard>
                 </div>
                 <div v-else-if="activeStep === 3" class="w-full max-w-4xl">
@@ -250,8 +255,9 @@ import PaymentForm from '../components/PaymentForm.vue';
 const flights = ref([]);
 const searchParams = ref(null);
 const activeStep = ref(0);
-const passengerStepRef = ref(null);
 const selectedFlight = ref(null);
+const isPassengerFormValid = ref(false);
+const passengerData = ref(null);
 
 const contactPerson = ref({
     firstName: '',
@@ -293,8 +299,23 @@ const stepperItems = [
     }
 ];
 
+// Handle passenger form data
+const handlePassengerData = (data) => {
+    passengerData.value = data;
+};
+
+// Handle passenger form validation
+const handlePassengerFormValid = (isValid) => {
+    isPassengerFormValid.value = isValid;
+};
+
 // set next step
 const nextStep = () => {
+    if (activeStep.value === 1 && !isPassengerFormValid.value) {
+        // Zeige Fehlermeldung wenn das Formular nicht valide ist
+        alert('Bitte füllen Sie alle erforderlichen Felder korrekt aus.');
+        return;
+    }
     activeStep.value++;
 };
 

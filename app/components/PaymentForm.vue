@@ -75,6 +75,7 @@ interface AdditionalPassenger {
   firstName: string;
   lastName: string;
   birthDate: string;
+  type: 'adult' | 'child' | 'infant';
 }
 
 const props = defineProps<{
@@ -110,44 +111,52 @@ const createPaymentLink = async () => {
 
   loading.value = true;
   try {
-    const passengerCount =
-      (props.bookingDetails?.passengers?.adults || 0) +
-      (props.bookingDetails?.passengers?.children || 0) +
-      (props.bookingDetails?.passengers?.infants || 0);
-
     const passengerDescription = [
       props.bookingDetails?.passengers?.adults ? `${props.bookingDetails.passengers.adults} Erwachsene` : null,
       props.bookingDetails?.passengers?.children ? `${props.bookingDetails.passengers.children} Kinder` : null,
       props.bookingDetails?.passengers?.infants ? `${props.bookingDetails.passengers.infants} Babys` : null
     ].filter(Boolean).join(', ');
 
-    console.log('Sending data:', {
-      contactPerson: props.contactPerson,
-      additionalPassengers: props.additionalPassengers
-    });
+    const requestData = {
+      amount: props.amount,
+      currency: props.currency || 'eur',
+      description: `Flug ${props.bookingDetails?.from} → ${props.bookingDetails?.to} am ${props.bookingDetails?.date} für ${passengerDescription}`,
+      metadata: {
+        flightId: props.bookingDetails?.flightNumber,
+        from: props.bookingDetails?.from,
+        to: props.bookingDetails?.to,
+        date: props.bookingDetails?.date,
+        passengers_adults: String(props.bookingDetails?.passengers?.adults || 0),
+        passengers_children: String(props.bookingDetails?.passengers?.children || 0),
+        passengers_infants: String(props.bookingDetails?.passengers?.infants || 0),
+        price_adult: String(props.bookingDetails?.prices?.adult || 0),
+        price_child: String(props.bookingDetails?.prices?.child || 0),
+        price_infant: String(props.bookingDetails?.prices?.infant || 0)
+      },
+      contactPerson: {
+        firstName: props.contactPerson.firstName,
+        lastName: props.contactPerson.lastName,
+        email: props.contactPerson.email,
+        phone: props.contactPerson.phone,
+        birthDate: props.contactPerson.birthDate,
+        address: props.contactPerson.address
+      },
+      additionalPassengers: props.additionalPassengers.map(passenger => ({
+        firstName: passenger.firstName,
+        lastName: passenger.lastName,
+        birthDate: passenger.birthDate,
+        type: passenger.type
+      }))
+    };
+
+    console.log('Sending data to payment API:', requestData);
 
     const { data } = await useFetch('/api/payment/create-link', {
       method: 'POST',
-      body: {
-        amount: props.amount,
-        currency: props.currency || 'eur',
-        description: `Flug ${props.bookingDetails?.from} → ${props.bookingDetails?.to} am ${props.bookingDetails?.date} für ${passengerDescription}`,
-        metadata: {
-          flightId: props.bookingDetails?.flightNumber,
-          from: props.bookingDetails?.from,
-          to: props.bookingDetails?.to,
-          date: props.bookingDetails?.date,
-          passengers_adults: String(props.bookingDetails?.passengers?.adults || 0),
-          passengers_children: String(props.bookingDetails?.passengers?.children || 0),
-          passengers_infants: String(props.bookingDetails?.passengers?.infants || 0),
-          price_adult: String(props.bookingDetails?.prices?.adult || 0),
-          price_child: String(props.bookingDetails?.prices?.child || 0),
-          price_infant: String(props.bookingDetails?.prices?.infant || 0)
-        },
-        contactPerson: props.contactPerson,
-        additionalPassengers: props.additionalPassengers
-      },
+      body: requestData,
     });
+    debugger
+    console.log('Payment API response:', data.value);
 
     if (data.value?.url) {
       window.open(data.value.url, '_blank');

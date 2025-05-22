@@ -44,7 +44,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['update:passengers']);
+const emit = defineEmits(['update:passengers', 'form-valid']);
 
 const contactPerson = ref<ContactPerson>({
     firstName: '',
@@ -94,10 +94,21 @@ const calculateAge = (birthDate: CalendarDate | null) => {
     return age;
 };
 
-const validateBirthDate = (birthDate: CalendarDate | null, type: 'adult' | 'child' | 'infant') => {
+const validateBirthDate = (birthDate: any, type: 'adult' | 'child' | 'infant') => {
     if (!birthDate) return false;
 
-    const age = calculateAge(birthDate);
+    const today = new CalendarDate(
+        new Date().getFullYear(),
+        new Date().getMonth() + 1,
+        new Date().getDate()
+    );
+
+    let age = today.year - birthDate.year;
+    const monthDiff = today.month - birthDate.month;
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.day < birthDate.day)) {
+        age--;
+    }
 
     switch (type) {
         case 'adult':
@@ -175,7 +186,7 @@ const formValidation = computed(() => ({
     contactPerson: {
         firstName: contactPerson.value.firstName.length > 0,
         lastName: contactPerson.value.lastName.length > 0,
-        birthDate: validateBirthDate(contactPerson.value.birthDate, 'adult'),
+        birthDate: contactPerson.value.birthDate ? validateBirthDate(contactPerson.value.birthDate, 'adult') : false,
         email: validateEmail(contactPerson.value.email),
         phone: validatePhone(contactPerson.value.phone),
         address: {
@@ -188,13 +199,24 @@ const formValidation = computed(() => ({
 }));
 
 const isFormValid = computed(() => {
-    const contactValid = Object.values(formValidation.value.contactPerson).every(valid =>
-        typeof valid === 'boolean' ? valid : Object.values(valid).every(v => v)
-    );
+    // Kontaktperson Validierung
+    const contactValid =
+        contactPerson.value.firstName.length > 0 &&
+        contactPerson.value.lastName.length > 0 &&
+        contactPerson.value.birthDate &&
+        validateBirthDate(contactPerson.value.birthDate, 'adult') &&
+        validateEmail(contactPerson.value.email) &&
+        validatePhone(contactPerson.value.phone) &&
+        contactPerson.value.address.street.length > 0 &&
+        validatePostalCode(contactPerson.value.address.postalCode) &&
+        contactPerson.value.address.city.length > 0 &&
+        contactPerson.value.address.country.length > 0;
 
+    // Zusätzliche Passagiere Validierung
     const additionalValid = additionalPassengers.value.every(passenger =>
         passenger.firstName.length > 0 &&
         passenger.lastName.length > 0 &&
+        passenger.birthDate &&
         validateBirthDate(passenger.birthDate, passenger.type)
     );
 
@@ -241,10 +263,13 @@ initializeAdditionalPassengers();
 
 // Watch for changes and emit updates
 watch([contactPerson, additionalPassengers], () => {
-    emit('update:passengers', {
+    const formData = {
         contactPerson: contactPerson.value,
         additionalPassengers: additionalPassengers.value
-    });
+    };
+
+    emit('update:passengers', formData);
+    emit('form-valid', isFormValid.value);
 }, { deep: true });
 </script>
 
@@ -388,7 +413,7 @@ watch([contactPerson, additionalPassengers], () => {
                         <UFormGroup label="Geburtsdatum" required>
                             <UPopover>
                                 <UButton color="neutral" variant="subtle" icon="i-lucide-calendar"
-                                    :state="validateBirthDate(passenger.birthDate, passenger.type) ? undefined : false"
+                                    :state="passenger.birthDate ? validateBirthDate(passenger.birthDate, passenger.type) ? undefined : false : false"
                                     class="w-full justify-start">
                                     {{ passenger.birthDate ? df.format(passenger.birthDate.toDate(getLocalTimeZone())) :
                                         'Geburtsdatum auswählen' }}
@@ -403,7 +428,8 @@ watch([contactPerson, additionalPassengers], () => {
                                 </template>
                             </UPopover>
                             <template #error>
-                                <span v-if="!validateBirthDate(passenger.birthDate, passenger.type)"
+                                <span
+                                    v-if="!passenger.birthDate || !validateBirthDate(passenger.birthDate, passenger.type)"
                                     class="text-red-500 text-sm">
                                     {{ getBirthDateErrorMessage(passenger.birthDate, passenger.type) }}
                                 </span>

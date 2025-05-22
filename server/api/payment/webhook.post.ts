@@ -5,8 +5,64 @@ import { getDb } from '../../utils/firebase-admin';
 const config = useRuntimeConfig();
 
 const stripe = new Stripe(config.stripeSecretKey!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-04-30.basil',
 });
+
+interface CalendarDate {
+  calendar: {
+    identifier: string;
+  };
+  era: string;
+  year: number;
+  month: number;
+  day: number;
+}
+
+interface Address {
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
+interface ContactPerson {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: CalendarDate;
+  address: Address;
+}
+
+interface AdditionalPassenger {
+  firstName: string;
+  lastName: string;
+  birthDate: CalendarDate;
+  type: 'adult' | 'child' | 'infant';
+}
+
+interface BookingData {
+  flightId: string;
+  flightData: any;
+  contactPerson: ContactPerson;
+  additionalPassengers: AdditionalPassenger[];
+  amount: number;
+  metadata: {
+    flightId: string;
+    from: string;
+    to: string;
+    date: string;
+    passengers_adults: string;
+    passengers_children: string;
+    passengers_infants: string;
+    price_adult: string;
+    price_child: string;
+    price_infant: string;
+  };
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default defineEventHandler(async (event) => {
   const rawBody = await readRawBody(event);
@@ -49,7 +105,7 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const bookingData = bookingDoc.data();
+      const bookingData = bookingDoc.data() as BookingData;
       if (!bookingData) {
         throw createError({
           statusCode: 404,
@@ -62,6 +118,11 @@ export default defineEventHandler(async (event) => {
         status: 'confirmed',
         updatedAt: new Date().toISOString()
       });
+
+      // Formatiere das Geburtsdatum
+      const formatBirthDate = (date: CalendarDate) => {
+        return `${date.day}.${date.month}.${date.year}`;
+      };
 
       // Erstelle eine detaillierte E-Mail für den Admin
       const emailHtml = `
@@ -77,12 +138,17 @@ export default defineEventHandler(async (event) => {
           <p><strong>Name:</strong> ${bookingData.contactPerson.firstName} ${bookingData.contactPerson.lastName}</p>
           <p><strong>E-Mail:</strong> ${bookingData.contactPerson.email}</p>
           <p><strong>Telefon:</strong> ${bookingData.contactPerson.phone}</p>
-          <p><strong>Adresse:</strong> ${bookingData.contactPerson.address}</p>
+          <p><strong>Geburtsdatum:</strong> ${formatBirthDate(bookingData.contactPerson.birthDate)}</p>
+          <p><strong>Adresse:</strong> ${bookingData.contactPerson.address.street}, ${bookingData.contactPerson.address.postalCode} ${bookingData.contactPerson.address.city}, ${bookingData.contactPerson.address.country}</p>
           
           <h4 style="color: #2c5282; margin-top: 20px;">Weitere Passagiere</h4>
           <ul style="list-style: none; padding: 0;">
-            ${bookingData.additionalPassengers.map((passenger: any) => `
-              <li>${passenger.firstName} ${passenger.lastName} (Geboren: ${passenger.birthDate})</li>
+            ${bookingData.additionalPassengers.map((passenger) => `
+              <li>
+                ${passenger.firstName} ${passenger.lastName} 
+                (${passenger.type === 'adult' ? 'Erwachsener' : passenger.type === 'child' ? 'Kind' : 'Säugling'})
+                - Geboren: ${formatBirthDate(passenger.birthDate)}
+              </li>
             `).join('')}
           </ul>
           
@@ -121,17 +187,18 @@ export default defineEventHandler(async (event) => {
             <p><strong>Flug:</strong> ${bookingData.metadata.from} → ${bookingData.metadata.to}</p>
             <p><strong>Datum:</strong> ${bookingData.metadata.date}</p>
             <p><strong>Passagiere:</strong> ${bookingData.contactPerson.firstName} ${bookingData.contactPerson.lastName}${bookingData.additionalPassengers.length > 0 ? ` + ${bookingData.additionalPassengers.length} weitere Passagiere` : ''}</p>
+            <p><strong>Gesamtbetrag:</strong> ${(session.amount_total! / 100).toFixed(2)}€</p>
           `,
         });
       }
     }
 
     return { received: true };
-  } catch (err: any) {
-    console.error('Webhook error:', err);
+  } catch (error) {
+    console.error('Webhook error:', error);
     throw createError({
-      statusCode: 400,
-      message: `Webhook Error: ${err.message}`,
+      statusCode: error instanceof Error ? 400 : 500,
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
     });
   }
 }); 
