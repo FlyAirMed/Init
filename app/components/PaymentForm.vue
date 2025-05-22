@@ -62,10 +62,27 @@ interface BookingDetails {
   };
 }
 
+interface ContactPerson {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  address: string;
+}
+
+interface AdditionalPassenger {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+}
+
 const props = defineProps<{
   amount: number;
   currency?: string;
   bookingDetails?: BookingDetails;
+  contactPerson: ContactPerson;
+  additionalPassengers: AdditionalPassenger[];
 }>();
 
 const loading = ref(false);
@@ -77,6 +94,17 @@ const formatAmount = (amount: number) => {
 const createPaymentLink = async () => {
   if (!props.amount || props.amount <= 0) {
     console.error('Ungültiger Betrag');
+    return;
+  }
+
+  // Validiere die Passagierdaten
+  if (!props.contactPerson || !props.contactPerson.firstName) {
+    console.error('Kontaktperson fehlt oder ist unvollständig');
+    return;
+  }
+
+  if (!props.additionalPassengers || !Array.isArray(props.additionalPassengers)) {
+    console.error('Zusätzliche Passagiere fehlen oder sind ungültig');
     return;
   }
 
@@ -92,6 +120,11 @@ const createPaymentLink = async () => {
       props.bookingDetails?.passengers?.children ? `${props.bookingDetails.passengers.children} Kinder` : null,
       props.bookingDetails?.passengers?.infants ? `${props.bookingDetails.passengers.infants} Babys` : null
     ].filter(Boolean).join(', ');
+
+    console.log('Sending data:', {
+      contactPerson: props.contactPerson,
+      additionalPassengers: props.additionalPassengers
+    });
 
     const { data } = await useFetch('/api/payment/create-link', {
       method: 'POST',
@@ -111,6 +144,8 @@ const createPaymentLink = async () => {
           price_child: String(props.bookingDetails?.prices?.child || 0),
           price_infant: String(props.bookingDetails?.prices?.infant || 0)
         },
+        contactPerson: props.contactPerson,
+        additionalPassengers: props.additionalPassengers
       },
     });
 

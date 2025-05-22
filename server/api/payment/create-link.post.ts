@@ -1,17 +1,54 @@
 import Stripe from 'stripe';
+import { getDb } from '../../utils/firebase-admin';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const config = useRuntimeConfig();
+
+const stripe = new Stripe(config.stripeSecretKey!, {
   apiVersion: '2023-10-16',
 });
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const { amount, currency, description, metadata } = body;
+  const { 
+    amount,
+    currency,
+    description,
+    metadata,
+    contactPerson,
+    additionalPassengers
+  } = body;
 
   try {
-    // Konvertiere den Euro-Betrag in Cent
-    const amountInCents = Math.round(amount * 100);
+    // Speichere die Buchung in Firestore
+    const db = getDb();
+    const bookingsRef = db.collection('bookings');
 
+    const bookingData = {
+      flightId: metadata.flightId,
+      contactPerson: {
+        firstName: contactPerson.firstName,
+        lastName: contactPerson.lastName,
+        email: contactPerson.email,
+        phone: contactPerson.phone,
+        birthDate: contactPerson.birthDate,
+        address: contactPerson.address
+      },
+      additionalPassengers: additionalPassengers.map((passenger: any) => ({
+        firstName: passenger.firstName,
+        lastName: passenger.lastName,
+        birthDate: passenger.birthDate
+      })),
+      amount: amount,
+      metadata,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const docRef = await bookingsRef.add(bookingData);
+    console.log('Booking saved with ID:', docRef.id);
+
+    // Erstelle den Payment Link mit der Buchungs-ID in den Metadaten
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -19,24 +56,19 @@ export default defineEventHandler(async (event) => {
           price_data: {
             currency: currency || 'eur',
             product_data: {
-              name: 'Flugbuchung',
-              description: description,
+              name: description,
             },
-            unit_amount: amountInCents,
+            unit_amount: amount,
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.PUBLIC_URL}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.PUBLIC_URL}/`,
-      metadata: metadata,
-      locale: 'de',
-      payment_method_options: {
-        card: {
-          request_three_d_secure: 'automatic',
-        },
-      },
+      success_url: `${config.public.baseUrl}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${config.public.baseUrl}/booking/cancel`,
+      metadata: {
+        bookingId: docRef.id
+      }
     });
 
     return { url: session.url };
@@ -44,7 +76,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error creating payment link:', error);
     throw createError({
       statusCode: 500,
-      message: error.message,
+      message: error.message
     });
   }
 }); 

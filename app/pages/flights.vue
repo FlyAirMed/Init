@@ -3,25 +3,12 @@
         <div class="container mx-auto px-4">
             <!-- Stepper -->
             <div class="mb-8">
-                <UStepper v-model="activeStep" :items="stepperItems" color="blue" size="lg" class="w-full" />
-            </div>
-
-            <!-- Navigation Buttons -->
-            <div class="flex justify-between mb-8">
-                <UButton v-if="activeStep > 0" icon="i-heroicons-chevron-left" color="white" variant="soft" size="sm"
-                    @click="handlePrevStep">
-                    Zurück
-                </UButton>
-                <UButton v-if="activeStep < stepperItems.length - 1" icon="i-heroicons-chevron-right" color="white"
-                    variant="soft" size="sm" :disabled="activeStep === 1 && !passengerStepRef?.isFormValid"
-                    @click="handleNextStep">
-                    Weiter
-                </UButton>
+                <UStepper v-model="activeStep" :items="stepperItems" size="md" class="w-full" />
             </div>
 
             <!-- Content based on active step -->
             <div class="flex justify-center">
-                <div v-if="activeStep === 0" class="w-full max-w-4xl">
+                <div class="w-fit">
                     <!-- Flight selection content -->
                     <!-- Flight Cards -->
                     <div class="grid gap-8">
@@ -33,8 +20,9 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-4">
                                         <div
-                                            class="bg-white p-3 rounded-xl shadow-sm ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
-                                            <UIcon name="i-heroicons-airplane-takeoff" class="h-5 w-5 text-blue-600" />
+                                            class="bg-white p-3 pb-2 rounded-xl shadow-sm ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
+                                            <UIcon name="fluent-emoji-high-contrast:airplane-departure" class=" h-5 w-5
+                                                text-blue-600" />
                                         </div>
                                         <div>
                                             <h2 class="text-lg font-semibold text-gray-800">
@@ -44,149 +32,172 @@
                                             <p class="text-sm text-gray-600">{{ formatDate(flight.date) }}</p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-4">
+                                    <div class="flex items-center flex-col gap-4">
                                         <div
-                                            class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl text-white shadow-lg">
+                                            class="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-md text-white shadow-lg">
                                             <div class="flex flex-col">
-                                                <div class="flex items-center gap-2 mb-1">
+                                                <div class="flex items-center">
                                                     <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
-                                                    <div class="text-2xl font-bold">{{ calculateTotalPrice(flight) }}€
+                                                    <div class="text-lg font-bold">{{ calculateTotalPrice(flight) }}€
                                                     </div>
-                                                </div>
-                                                <div class="text-sm opacity-90">
-                                                    <div class="flex items-center gap-1">
-                                                        <UIcon name="i-heroicons-user-group" class="h-4 w-4" />
-                                                        <span>Für {{ searchParams?.passengers?.adults || 1 }}
-                                                            Erwachsene</span>
-                                                    </div>
-                                                    <template v-if="searchParams?.passengers?.children">
-                                                        <div class="flex items-center gap-1">
-                                                            <UIcon name="i-heroicons-user" class="h-4 w-4" />
-                                                            <span>{{ searchParams?.passengers?.children }} Kinder</span>
-                                                        </div>
-                                                    </template>
-                                                    <template v-if="searchParams?.passengers?.infants">
-                                                        <div class="flex items-center gap-1">
-                                                            <UIcon name="i-heroicons-user-circle" class="h-4 w-4" />
-                                                            <span>{{ searchParams?.passengers?.infants }} Babys</span>
-                                                        </div>
-                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="text-sm opacity-90">
+                                            <div class="flex items-center gap-1">
+                                                <UIcon name="i-heroicons-user-group" class="h-4 w-4" />
+                                                <span>Für {{ searchParams?.passengers?.adults || 1 }}
+                                                    Erwachsene</span>
+                                            </div>
+                                            <template v-if="searchParams?.passengers?.children">
+                                                <div class="flex items-center gap-1">
+                                                    <UIcon name="i-heroicons-user" class="h-4 w-4" />
+                                                    <span>{{ searchParams?.passengers?.children }} Kinder</span>
+                                                </div>
+                                            </template>
+                                            <template v-if="searchParams?.passengers?.infants">
+                                                <div class="flex items-center gap-1">
+                                                    <UIcon name="i-heroicons-user-circle" class="h-4 w-4" />
+                                                    <span>{{ searchParams?.passengers?.infants }} Babys</span>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Flight Details -->
-                            <div class="p-6">
-                                <!-- Flight Segments -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div v-for="(segment, index) in flight.segments" :key="index"
-                                        class="bg-white/90 backdrop-blur-sm p-6 rounded-xl ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="flex items-center gap-3">
+                                <!-- Flight Details -->
+                                <div class="p-6" v-if="activeStep === 0">
+                                    <!-- Flight Segments -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div v-for="(segment, index) in flight.segments" :key="index"
+                                            class="bg-white/90 backdrop-blur-sm p-6 rounded-xl ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div
+                                                        class="bg-white p-2 pb-0 rounded-lg shadow-sm ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
+                                                        <UIcon name="fluent-emoji-high-contrast:airplane"
+                                                            class="text-blue-600" />
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-base font-medium text-gray-800">
+                                                            {{ AIRPORTS[segment.from].name }} → {{
+                                                                AIRPORTS[segment.to].name
+                                                            }}
+                                                        </div>
+                                                        <div class="text-sm text-gray-600">
+                                                            {{ formatSegmentTime(segment.departure) }} - {{
+                                                                formatSegmentTime(segment.arrival) }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-base font-semibold text-gray-700">{{ segment.duration
+                                                    }}
+                                                </div>
+                                            </div>
+
+                                            <!-- Segment Details -->
+                                            <div class="grid grid-cols-2 gap-4">
                                                 <div
-                                                    class="bg-white p-2 rounded-lg shadow-sm ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
-                                                    <UIcon name="i-heroicons-airplane" class="h-4 w-4 text-blue-600" />
-                                                </div>
-                                                <div>
-                                                    <div class="text-base font-medium text-gray-800">
-                                                        {{ AIRPORTS[segment.from].name }} → {{ AIRPORTS[segment.to].name
-                                                        }}
+                                                    class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <UIcon name="i-heroicons-arrow-trending-up"
+                                                            class="h-4 w-4 text-blue-500" />
+                                                        <div class="text-sm text-gray-600">Abflug</div>
                                                     </div>
-                                                    <div class="text-sm text-gray-600">
-                                                        {{ formatSegmentTime(segment.departure) }} - {{
-                                                            formatSegmentTime(segment.arrival) }}
+                                                    <div class="text-base font-semibold text-gray-800">{{
+                                                        formatSegmentTime(segment.departure) }}</div>
+                                                    <div class="text-sm text-gray-600">{{ AIRPORTS[segment.from].name }}
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="text-base font-semibold text-gray-700">{{ segment.duration }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Segment Details -->
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div
-                                                class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <UIcon name="i-heroicons-arrow-trending-up"
-                                                        class="h-4 w-4 text-blue-500" />
-                                                    <div class="text-sm text-gray-600">Abflug</div>
-                                                </div>
-                                                <div class="text-base font-semibold text-gray-800">{{
-                                                    formatSegmentTime(segment.departure) }}</div>
-                                                <div class="text-sm text-gray-600">{{ AIRPORTS[segment.from].name }}
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <UIcon name="i-heroicons-arrow-trending-down"
-                                                        class="h-4 w-4 text-blue-500" />
-                                                    <div class="text-sm text-gray-600">Ankunft</div>
-                                                </div>
-                                                <div class="text-base font-semibold text-gray-800">{{
-                                                    formatSegmentTime(segment.arrival) }}</div>
-                                                <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name }}
+                                                <div
+                                                    class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30 hover:ring-blue-200/50 transition-all">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <UIcon name="i-heroicons-arrow-trending-down"
+                                                            class="h-4 w-4 text-blue-500" />
+                                                        <div class="text-sm text-gray-600">Ankunft</div>
+                                                    </div>
+                                                    <div class="text-base font-semibold text-gray-800">{{
+                                                        formatSegmentTime(segment.arrival) }}</div>
+                                                    <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Luggage Information -->
+                                    <div
+                                        class="mt-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl ring-1 ring-blue-200/30">
+                                        <div class="flex items-center gap-3 mb-4">
+                                            <div class="bg-white p-2 pb-1 rounded-lg shadow-sm ring-1 ring-blue-200/30">
+                                                <UIcon name="fluent-emoji-high-contrast:handbag"
+                                                    class="h-5 w-5 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-gray-800">Gepäckinformationen</h3>
+                                                <p class="text-sm text-gray-600">Pro Person inklusive</p>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <UIcon name="fluent-emoji-high-contrast:baggage-claim"
+                                                        class="h-4 w-4 text-blue-500" />
+                                                    <div class="text-sm text-gray-600">Handgepäck</div>
+                                                </div>
+                                                <div class="text-base font-semibold text-gray-800">1x Cabin</div>
+                                                <div class="text-sm text-gray-600">Max. 55 x 40 x 20 cm</div>
+                                            </div>
+                                            <div class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <UIcon name="fluent-emoji-high-contrast:backpack"
+                                                        class="h-4 w-4 text-blue-500" />
+                                                    <div class="text-sm text-gray-600">Aufgegebenes Gepäck</div>
+                                                </div>
+                                                <div class="text-base font-semibold text-gray-800">1x 23kg</div>
+                                                <div class="text-sm text-gray-600">Max. 158 cm (L+B+H)</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                                            <div class="flex items-start gap-2">
+                                                <UIcon name="i-heroicons-information-circle"
+                                                    class="h-5 w-5 text-blue-600 mt-0.5" />
+                                                <div class="text-sm text-gray-700">
+                                                    <span class="font-medium">Hinweis:</span> Die Gepäckmenge ist pro
+                                                    Person
+                                                    gültig.
+                                                    Bei {{ searchParams?.passengers?.adults || 1 }} Erwachsenen stehen
+                                                    insgesamt
+                                                    {{ searchParams?.passengers?.adults || 1 }}x Handgepäck und
+                                                    {{ searchParams?.passengers?.adults || 1 }}x 23kg Aufgabegepäck zur
+                                                    Verfügung.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
 
-                                <!-- Luggage Information -->
-                                <div class="mt-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl ring-1 ring-blue-200/30">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <div class="bg-white p-2 rounded-lg shadow-sm ring-1 ring-blue-200/30">
-                                            <UIcon name="i-heroicons-suitcase" class="h-5 w-5 text-blue-600" />
-                                        </div>
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800">Gepäckinformationen</h3>
-                                            <p class="text-sm text-gray-600">Pro Person inklusive</p>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <UIcon name="i-heroicons-briefcase" class="h-4 w-4 text-blue-500" />
-                                                <div class="text-sm text-gray-600">Handgepäck</div>
-                                            </div>
-                                            <div class="text-base font-semibold text-gray-800">1x Cabin</div>
-                                            <div class="text-sm text-gray-600">Max. 55 x 40 x 20 cm</div>
-                                        </div>
-                                        <div class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <UIcon name="i-heroicons-suitcase" class="h-4 w-4 text-blue-500" />
-                                                <div class="text-sm text-gray-600">Aufgegebenes Gepäck</div>
-                                            </div>
-                                            <div class="text-base font-semibold text-gray-800">1x 23kg</div>
-                                            <div class="text-sm text-gray-600">Max. 158 cm (L+B+H)</div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-                                        <div class="flex items-start gap-2">
-                                            <UIcon name="i-heroicons-information-circle"
-                                                class="h-5 w-5 text-blue-600 mt-0.5" />
-                                            <div class="text-sm text-gray-700">
-                                                <span class="font-medium">Hinweis:</span> Die Gepäckmenge ist pro Person
-                                                gültig.
-                                                Bei {{ searchParams?.passengers?.adults || 1 }} Erwachsenen stehen
-                                                insgesamt
-                                                {{ searchParams?.passengers?.adults || 1 }}x Handgepäck und
-                                                {{ searchParams?.passengers?.adults || 1 }}x 23kg Aufgabegepäck zur
-                                                Verfügung.
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div v-if="activeStep === 1" class="w-full max-w-4xl">
+                                    <PassengerStep :total-adults="searchParams?.passengers?.adults || 1"
+                                        :total-children="searchParams?.passengers?.children || 0"
+                                        :total-infants="searchParams?.passengers?.infants || 0" />
                                 </div>
 
                                 <!-- Booking Button -->
-                                <div class="mt-6 flex justify-end">
-                                    <UButton color="blue" size="lg" class="px-8" @click="selectFlight(flight)">
-                                        Weiter zur Passagierinformationen
+                                <div class="mt-6 flex justify-between">
+                                    <!-- go back Button -->
+                                    <UButton size="lg" class="px-8" @click="navigateTo('/')">
+                                        <template #icon>
+                                            <UIcon name="i-heroicons-arrow-left" class="h-5 w-5" />
+                                        </template>
+                                        Zurück zur Flugauswahl
+                                    </UButton>
+                                    <UButton size="lg" class="px-8" @click="nextStep()">
+                                        Weiter
                                         <template #trailing>
-                                            <UIcon name="i-heroicons-arrow-right" class="h-5 w-5" />
+                                            <UIcon name="fluent-emoji-high-contrast:airplane-departure"
+                                                class="h-5 w-5" />
                                         </template>
                                     </UButton>
                                 </div>
@@ -194,10 +205,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-else-if="activeStep === 1" class="w-full max-w-4xl">
-                    <PassengerStep ref="passengerStepRef" :total-passengers="searchParams?.passengers?.adults || 1" />
-                </div>
-                <div v-else-if="activeStep === 2" class="w-full max-w-4xl">
+                <div v-if="activeStep === 2" class="w-full max-w-4xl">
                     <!-- Payment content -->
                     <UCard class="bg-white/90 backdrop-blur-sm">
                         <template #header>
@@ -245,23 +253,24 @@ const activeStep = ref(0);
 const passengerStepRef = ref(null);
 const selectedFlight = ref(null);
 
-// Form data
 const contactPerson = ref({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     birthDate: '',
-    address: ''
+    address: '',
+    zip: '',
+    city: '',
+    country: ''
 });
 
-const additionalPassengers = ref([]);
 
 const stepperItems = [
     {
         title: 'Flugauswahl',
         description: 'Wählen Sie Ihren Flug',
-        icon: 'i-heroicons-airplane',
+        icon: 'fluent-emoji-high-contrast:airplane-arrival',
         disabled: false
     },
     {
@@ -284,30 +293,9 @@ const stepperItems = [
     }
 ];
 
-const isContactFormValid = () => {
-    return contactPerson.value.firstName &&
-        contactPerson.value.lastName &&
-        contactPerson.value.email &&
-        contactPerson.value.phone &&
-        contactPerson.value.birthDate &&
-        contactPerson.value.address;
-};
-
-const handleNextStep = () => {
-    if (activeStep.value === 0) {
-        stepperItems[1].disabled = false;
-    } else if (activeStep.value === 1 && passengerStepRef.value?.isFormValid) {
-        stepperItems[2].disabled = false;
-    }
-    if (activeStep.value < stepperItems.length - 1) {
-        activeStep.value++;
-    }
-};
-
-const handlePrevStep = () => {
-    if (activeStep.value > 0) {
-        activeStep.value--;
-    }
+// set next step
+const nextStep = () => {
+    activeStep.value++;
 };
 
 // Format date to German format
@@ -347,59 +335,7 @@ const calculateTotalPrice = (flight) => {
     return totalPrice;
 };
 
-const handlePaymentSuccess = () => {
-    // Zeige Erfolgsmeldung
-    toast.add({
-        title: 'Zahlung erfolgreich',
-        description: 'Vielen Dank für Ihre Buchung! Sie erhalten in Kürze eine Bestätigung per E-Mail.',
-        color: 'green',
-        icon: 'i-heroicons-check-circle',
-        timeout: 5000
-    });
 
-    // Optional: Weiterleitung zur Bestätigungsseite
-    // navigateTo('/booking-confirmation');
-};
-
-const handlePaymentError = (error) => {
-    // Zeige Fehlermeldung
-    toast.add({
-        title: 'Zahlung fehlgeschlagen',
-        description: error.message || 'Bitte versuchen Sie es später erneut.',
-        color: 'red',
-        icon: 'i-heroicons-exclamation-circle',
-        timeout: 5000
-    });
-};
-
-// Add flight selection handler
-const selectFlight = (flight) => {
-    selectedFlight.value = flight;
-    // Update URL with flight ID
-    const route = useRoute();
-    const query = { ...route.query, flightId: flight.id };
-    navigateTo({ query });
-    handleNextStep();
-};
-
-// Update search function to use direct query parameters
-const handleSearch = async (searchData) => {
-    const query = {
-        origin: searchData.origin,
-        destination: searchData.destination,
-        tripType: searchData.tripType,
-        adults: searchData.passengers.adults,
-        children: searchData.passengers.children,
-        infants: searchData.passengers.infants,
-        departureDate: searchData.departureDate
-    };
-
-    // Navigate to flights page with search parameters
-    navigateTo({
-        path: '/flights',
-        query
-    });
-};
 
 onMounted(async () => {
     try {
@@ -428,3 +364,40 @@ onMounted(async () => {
     }
 });
 </script>
+
+<style scoped>
+#reka-stepper-item-title-v-0 {
+    color: white;
+    : white;
+}
+
+#reka-stepper-item-title-v-1 {
+    color: white;
+}
+
+#reka-stepper-item-title-v-2 {
+    color: white;
+}
+
+#reka-stepper-item-title-v-3 {
+    color: white;
+}
+
+
+#reka-stepper-item-description-v-0 {
+    color: white;
+}
+
+#reka-stepper-item-description-v-1 {
+    color: white;
+}
+
+
+#reka-stepper-item-description-v-2 {
+    color: white;
+}
+
+#reka-stepper-item-description-v-3 {
+    color: white;
+}
+</style>

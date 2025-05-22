@@ -2,14 +2,10 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  modules: [
-    '@nuxt/ui',
-    '@nuxt/eslint',
-    '@nuxt/icon'
-  ],
+  modules: ['@nuxt/ui', '@nuxt/eslint', '@nuxt/icon'],
 
   css: ['~/assets/css/main.css'],
-
+  ssr: false,
   future: {
     compatibilityVersion: 4
   },
