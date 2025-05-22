@@ -1,13 +1,40 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 py-8">
-        <div class="container mx-auto px-4">
+    <div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 py-8 relative overflow-hidden">
+        <!-- Background Decorative Elements -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <!-- Floating Icons -->
+            <div class="absolute top-1/4 left-10 animate-float-slow">
+                <UIcon name="fluent-emoji-high-contrast:airplane" class="h-12 w-12 text-blue-300/40" />
+            </div>
+            <div class="absolute top-1/3 right-20 animate-float-slower">
+                <UIcon name="fluent-emoji-high-contrast:airplane-departure" class="h-12 w-12 text-blue-300/40" />
+            </div>
+            <div class="absolute bottom-1/4 left-1/4 animate-float-slowest">
+                <UIcon name="fluent-emoji-high-contrast:globe-showing-europe-africa"
+                    class="h-12 w-12 text-blue-300/40" />
+            </div>
+            <div class="absolute top-2/3 right-1/3 animate-float-slow">
+                <UIcon name="fluent-emoji-high-contrast:airplane-arrival" class="h-12 w-12 text-blue-300/40" />
+            </div>
+
+            <!-- Animated Circles -->
+            <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-400/10 rounded-full animate-pulse-slow"></div>
+            <div
+                class="absolute bottom-1/3 left-1/3 w-[32rem] h-[32rem] bg-blue-300/10 rounded-full animate-pulse-slower">
+            </div>
+            <div class="absolute top-2/3 right-1/4 w-72 h-72 bg-blue-200/10 rounded-full animate-pulse-slowest"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative">
             <!-- Stepper -->
             <div class="mb-8">
-                <UStepper v-model="activeStep" :items="stepperItems" size="md" class="w-full" />
+                <UStepper v-model="activeStep" :items="stepperItems" size="md"
+                    class="[&_.stepper-step--active_.stepper-step-label]:text-white [&_.stepper-step-label]:text-gray-300 [&_.stepper-step--active_.stepper-step-description]:text-blue-200 [&_.stepper-step-description]:text-gray-400"
+                    style=" color: white !important; " />
             </div>
 
             <!-- Content based on active step -->
-            <div class="flex justify-center">
+            <div class=" flex justify-center">
                 <div class="w-fit">
                     <!-- Flight selection content -->
                     <!-- Flight Cards -->
@@ -38,7 +65,8 @@
                                             <div class="flex flex-col">
                                                 <div class="flex items-center">
                                                     <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
-                                                    <div class="text-lg font-bold">{{ calculateTotalPrice(flight) }}€
+                                                    <div class="text-lg font-bold">{{ calculateTotalPrice(flight)
+                                                    }}€
                                                     </div>
                                                 </div>
                                             </div>
@@ -90,7 +118,8 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="text-base font-semibold text-gray-700">{{ segment.duration
+                                                <div class="text-base font-semibold text-gray-700">{{
+                                                    segment.duration
                                                 }}
                                                 </div>
                                             </div>
@@ -106,7 +135,8 @@
                                                     </div>
                                                     <div class="text-base font-semibold text-gray-800">{{
                                                         formatSegmentTime(segment.departure) }}</div>
-                                                    <div class="text-sm text-gray-600">{{ AIRPORTS[segment.from].name }}
+                                                    <div class="text-sm text-gray-600">{{
+                                                        AIRPORTS[segment.from].name }}
                                                     </div>
                                                 </div>
                                                 <div
@@ -118,7 +148,8 @@
                                                     </div>
                                                     <div class="text-base font-semibold text-gray-800">{{
                                                         formatSegmentTime(segment.arrival) }}</div>
-                                                    <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name }}
+                                                    <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name
+                                                    }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -134,23 +165,25 @@
                                                     class="h-5 w-5 text-blue-600" />
                                             </div>
                                             <div>
-                                                <h3 class="text-lg font-semibold text-gray-800">Gepäckinformationen</h3>
+                                                <h3 class="text-lg font-semibold text-gray-800">Gepäckinformationen
+                                                </h3>
                                                 <p class="text-sm text-gray-600">Pro Person inklusive</p>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30">
                                                 <div class="flex items-center gap-2 mb-2">
-                                                    <UIcon name="fluent-emoji-high-contrast:baggage-claim"
+                                                    <UIcon name="fluent-emoji-high-contrast:backpack"
                                                         class="h-4 w-4 text-blue-500" />
                                                     <div class="text-sm text-gray-600">Handgepäck</div>
                                                 </div>
-                                                <div class="text-base font-semibold text-gray-800">1x Cabin</div>
+                                                <div class="text-base font-semibold text-gray-800">1x Cabin (7kg)
+                                                </div>
                                                 <div class="text-sm text-gray-600">Max. 55 x 40 x 20 cm</div>
                                             </div>
                                             <div class="bg-white p-4 rounded-xl ring-1 ring-blue-200/30">
                                                 <div class="flex items-center gap-2 mb-2">
-                                                    <UIcon name="fluent-emoji-high-contrast:backpack"
+                                                    <UIcon name="fluent-emoji-high-contrast:baggage-claim"
                                                         class="h-4 w-4 text-blue-500" />
                                                     <div class="text-sm text-gray-600">Aufgegebenes Gepäck</div>
                                                 </div>
@@ -163,13 +196,16 @@
                                                 <UIcon name="i-heroicons-information-circle"
                                                     class="h-5 w-5 text-blue-600 mt-0.5" />
                                                 <div class="text-sm text-gray-700">
-                                                    <span class="font-medium">Hinweis:</span> Die Gepäckmenge ist pro
+                                                    <span class="font-medium">Hinweis:</span> Die Gepäckmenge ist
+                                                    pro
                                                     Person
                                                     gültig.
-                                                    Bei {{ searchParams?.passengers?.adults || 1 }} Erwachsenen stehen
+                                                    Bei {{ searchParams?.passengers?.adults || 1 }} Erwachsenen
+                                                    stehen
                                                     insgesamt
                                                     {{ searchParams?.passengers?.adults || 1 }}x Handgepäck und
-                                                    {{ searchParams?.passengers?.adults || 1 }}x 23kg Aufgabegepäck zur
+                                                    {{ searchParams?.passengers?.adults || 1 }}x 23kg Aufgabegepäck
+                                                    zur
                                                     Verfügung.
                                                 </div>
                                             </div>
@@ -387,38 +423,140 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Remove old stepper styles */
 #reka-stepper-item-title-v-0 {
     color: white;
-    : white;
 }
 
-#reka-stepper-item-title-v-1 {
+/* Stepper descriptions */
+[id^="reka-stepper-item-description-v-1"] {
     color: white;
 }
 
-#reka-stepper-item-title-v-2 {
-    color: white;
+:deep(.stepper-step-label) {
+    color: #fff !important;
 }
 
-#reka-stepper-item-title-v-3 {
-    color: white;
+:deep(.stepper-step--active .stepper-step-label) {
+    color: #fff !important;
+    font-weight: 700;
 }
 
-
-#reka-stepper-item-description-v-0 {
-    color: white;
+:deep(.stepper-step-description) {
+    color: #bfdbfe !important;
+    /* Tailwind blue-200 */
 }
 
-#reka-stepper-item-description-v-1 {
-    color: white;
+:deep(.stepper-step--active .stepper-step-description) {
+    color: #fff !important;
+    font-weight: 500;
 }
 
-
-#reka-stepper-item-description-v-2 {
-    color: white;
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out;
 }
 
-#reka-stepper-item-description-v-3 {
-    color: white;
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+.animate-slide-up-delayed {
+    animation: slideUp 0.8s ease-out 0.2s both;
+}
+
+.animate-slide-up-delayed-2 {
+    animation: slideUp 0.8s ease-out 0.4s both;
+}
+
+.animate-fade-in-delayed {
+    animation: fadeIn 0.8s ease-out 0.6s both;
+}
+
+.animate-bounce-slow {
+    animation: bounce 2s infinite;
+}
+
+.animate-float-slow {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slower {
+    animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-slowest {
+    animation: float 10s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+    animation: pulse 4s ease-in-out infinite;
+}
+
+.animate-pulse-slower {
+    animation: pulse 6s ease-in-out infinite;
+}
+
+.animate-pulse-slowest {
+    animation: pulse 8s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.2;
+    }
 }
 </style>

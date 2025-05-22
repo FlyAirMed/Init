@@ -160,8 +160,8 @@ export default defineEventHandler(async (event) => {
         },
       ],
       mode: 'payment',
-      success_url: `${config.public.baseUrl}/booking/success`,
-      cancel_url: `${config.public.baseUrl}/`,
+      success_url: `${config.public.publicUrl}/booking/success`,
+      cancel_url: `${config.public.publicUrl}/`,
       metadata: {
         bookingId: docRef.id,
         flightId: metadata.flightId
@@ -172,7 +172,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error('Error creating payment link:', error);
     throw createError({
-      statusCode: error.statusCode || 500,
+      statusCode: error instanceof Error && 'statusCode' in error ? (error as { statusCode: number }).statusCode : 500,
       message: error instanceof Error ? error.message : 'Unknown error occurred'
     });
   }

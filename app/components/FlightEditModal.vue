@@ -117,6 +117,17 @@
                                         </div>
                                     </div>
 
+                                    <!-- Flight Number for Intermediate Stop -->
+                                    <div class="mt-4 bg-white p-4 rounded-lg">
+                                        <UFormGroup label="Flugnummer für Zwischenstopp" class="text-base"
+                                            help="Flugnummer für den Flug nach/von Athen"
+                                            :state="formValidation.intermediateStop.flightNumber.valid ? undefined : false"
+                                            :error="formValidation.intermediateStop.flightNumber.message">
+                                            <UInput v-model="form.intermediateStop.flightNumber" type="text"
+                                                class="h-12 text-base" size="lg" placeholder="z.B. ATA456" />
+                                        </UFormGroup>
+                                    </div>
+
                                     <!-- Waiting Time Display -->
                                     <div class="mt-4 p-3 bg-white rounded-lg flex items-center gap-3">
                                         <div class="bg-yellow-100 p-2 rounded-md">
@@ -201,6 +212,25 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Flugnummern -->
+                            <div class="mb-6">
+                                <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                                    <UIcon name="i-heroicons-paper-airplane" class="h-5 w-5" />
+                                    Flugnummern
+                                </h4>
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                        <UFormGroup label="Hauptflugnummer" class="text-base"
+                                            help="Flugnummer für den Hauptflug"
+                                            :state="formValidation.flightNumber.valid ? undefined : false"
+                                            :error="formValidation.flightNumber.message">
+                                            <UInput v-model="form.flightNumber" type="text" class="h-12 text-base"
+                                                size="lg" placeholder="z.B. ATA123" />
+                                        </UFormGroup>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -278,6 +308,34 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Baggage Allowance Section -->
+                        <div class="mb-6">
+                            <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                                <UIcon name="i-heroicons-suitcase" class="h-5 w-5" />
+                                Gepäckinformationen
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <UFormGroup label="Handgepäck (kg)" class="text-base"
+                                        help="Maximales Gewicht für Handgepäck"
+                                        :state="formValidation.baggageAllowance.cabin.valid ? undefined : false"
+                                        :error="formValidation.baggageAllowance.cabin.message">
+                                        <UInput v-model="form.baggageAllowance.cabin" type="number" min="0"
+                                            class="h-12 text-base" size="lg" />
+                                    </UFormGroup>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                                    <UFormGroup label="Aufgegebenes Gepäck (kg)" class="text-base"
+                                        help="Maximales Gewicht für aufgegebenes Gepäck"
+                                        :state="formValidation.baggageAllowance.checked.valid ? undefined : false"
+                                        :error="formValidation.baggageAllowance.checked.message">
+                                        <UInput v-model="form.baggageAllowance.checked" type="number" min="0"
+                                            class="h-12 text-base" size="lg" />
+                                    </UFormGroup>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -285,11 +343,10 @@
 
         <template #footer>
             <div class="flex justify-end items-center space-x-4">
-                <UButton color="red" variant="ghost" icon="i-heroicons-x-mark" label="Abbrechen" @click="closeModal"
-                    class="px-4 py-2" />
-                <UButton color="green" variant="solid" icon="i-heroicons-check" :loading="isLoading"
-                    :disabled="!isFormValid" :label="isEditing ? 'Speichern' : 'Flug erstellen'" @click="saveFlight"
-                    class="px-4 py-2" />
+                <UButton variant="ghost" icon="i-heroicons-x-mark" label="Abbrechen" @click="closeModal"
+                    class="px-4 py-2 text-red-500" />
+                <UButton variant="solid" icon="i-heroicons-check" :loading="isLoading" :disabled="!isFormValid"
+                    :label="isEditing ? 'Speichern' : 'Flug erstellen'" @click="saveFlight" class="px-4 py-2" />
             </div>
         </template>
     </UModal>
@@ -406,7 +463,13 @@ const initialFormState = {
     segments: [],
     intermediateStop: {
         arrival: '',
-        departure: ''
+        departure: '',
+        flightNumber: ''
+    },
+    flightNumber: '',
+    baggageAllowance: {
+        cabin: 7,
+        checked: 23
     }
 };
 
@@ -522,6 +585,10 @@ const formValidation = computed(() => ({
                     : !validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)
                         ? 'Die Ruhezeit in Athen muss mindestens 30 Minuten betragen'
                         : ''
+        },
+        flightNumber: {
+            valid: !showIntermediateStop.value || !!form.intermediateStop.flightNumber,
+            message: !form.intermediateStop.flightNumber ? 'Bitte geben Sie eine Flugnummer für den Zwischenstopp ein' : ''
         }
     },
     prices: {
@@ -537,6 +604,20 @@ const formValidation = computed(() => ({
             valid: form.prices[PassengerType.INFANT] > 0,
             message: form.prices[PassengerType.INFANT] <= 0 ? 'Bitte geben Sie einen gültigen Preis für Säuglinge ein' : ''
         }
+    },
+    baggageAllowance: {
+        cabin: {
+            valid: form.baggageAllowance.cabin > 0,
+            message: form.baggageAllowance.cabin <= 0 ? 'Bitte geben Sie ein gültiges Handgepäck-Gewicht ein' : ''
+        },
+        checked: {
+            valid: form.baggageAllowance.checked > 0,
+            message: form.baggageAllowance.checked <= 0 ? 'Bitte geben Sie ein gültiges Gepäck-Gewicht ein' : ''
+        }
+    },
+    flightNumber: {
+        valid: !!form.flightNumber,
+        message: !form.flightNumber ? 'Bitte geben Sie eine Flugnummer für den Hauptflug ein' : ''
     }
 }));
 
@@ -557,7 +638,8 @@ const resetForm = () => {
     };
     form.intermediateStop = {
         arrival: '',
-        departure: ''
+        departure: '',
+        flightNumber: ''
     };
     delete form.id;
     errorMessage.value = '';
@@ -591,7 +673,8 @@ watch(() => props.flight, (newFlight) => {
                 form.arrivalTime = new Date(segment.arrival).toTimeString().slice(0, 5);
                 form.intermediateStop = {
                     arrival: '',
-                    departure: ''
+                    departure: '',
+                    flightNumber: ''
                 };
             }
         }
@@ -600,6 +683,11 @@ watch(() => props.flight, (newFlight) => {
             [PassengerType.ADULT]: newFlight.prices[PassengerType.ADULT] || 299.99,
             [PassengerType.CHILD]: newFlight.prices[PassengerType.CHILD] || 179.99,
             [PassengerType.INFANT]: newFlight.prices[PassengerType.INFANT] || 49.99,
+        };
+
+        form.baggageAllowance = {
+            cabin: newFlight.baggageAllowance?.cabin || 8,
+            checked: newFlight.baggageAllowance?.checked || 23
         };
     } else {
         resetForm();
@@ -631,7 +719,8 @@ const saveFlight = async () => {
             arrivalTime: form.arrivalTime,
             availableSeats: form.availableSeats,
             prices: form.prices,
-            intermediateStop: form.intermediateStop
+            intermediateStop: form.intermediateStop,
+            baggageAllowance: form.baggageAllowance
         }
     });
 
@@ -659,7 +748,9 @@ const saveFlight = async () => {
                     to: 'ATH',
                     departure: depTime.toISOString(),
                     arrival: arrTime.toISOString(),
-                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival)
+                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival),
+                    flightNumber: form.flightNumber,
+                    baggageAllowance: form.baggageAllowance
                 });
 
                 // Second segment: ATH to DAM
@@ -675,7 +766,9 @@ const saveFlight = async () => {
                     to: destination,
                     departure: athDepTime.toISOString(),
                     arrival: damArrTime.toISOString(),
-                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime)
+                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime),
+                    flightNumber: form.intermediateStop.flightNumber,
+                    baggageAllowance: form.baggageAllowance
                 });
             } else {
                 // First segment: DAM to ATH
@@ -686,7 +779,9 @@ const saveFlight = async () => {
                     to: 'ATH',
                     departure: depTime.toISOString(),
                     arrival: arrTime.toISOString(),
-                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival)
+                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival),
+                    flightNumber: form.flightNumber,
+                    baggageAllowance: form.baggageAllowance
                 });
 
                 // Second segment: ATH to Destination
@@ -701,7 +796,9 @@ const saveFlight = async () => {
                     to: destination,
                     departure: athDepTime.toISOString(),
                     arrival: finalArrTime.toISOString(),
-                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime)
+                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime),
+                    flightNumber: form.intermediateStop.flightNumber,
+                    baggageAllowance: form.baggageAllowance
                 });
             }
         } else {
@@ -717,7 +814,9 @@ const saveFlight = async () => {
                 to: destination,
                 departure: depTime.toISOString(),
                 arrival: arrTime.toISOString(),
-                duration: calculateDuration(form.departureTime, form.arrivalTime)
+                duration: calculateDuration(form.departureTime, form.arrivalTime),
+                flightNumber: form.flightNumber,
+                baggageAllowance: form.baggageAllowance
             });
         }
 
@@ -749,7 +848,8 @@ const saveFlight = async () => {
                     new Date(segment.departure).toTimeString().slice(0, 5),
                     new Date(segment.arrival).toTimeString().slice(0, 5)
                 )
-            }))
+            })),
+            baggageAllowance: form.baggageAllowance
         };
 
         const endpoint = isEditing.value && form.id

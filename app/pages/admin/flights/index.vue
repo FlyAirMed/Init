@@ -1,6 +1,6 @@
 <template>
     <div class="container mx-auto p-4 md:p-6">
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Flugverwaltung</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-200 mb-6">Flugverwaltung</h1>
 
         <!-- Error message -->
         <div v-if="errorMessage" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
@@ -169,7 +169,7 @@ const showDeleteModal = ref(false);
 const flightToDelete = ref(null);
 const searchQuery = ref('');
 const statusFilter = ref('');
-const showFlightModal = ref(true); // todo: set to false initially
+const showFlightModal = ref(false); // todo: set to false initially
 const currentFlight = ref(null);
 
 // Computed
@@ -223,7 +223,7 @@ const openCreateModal = () => {
 
 const editFlight = (flight) => {
     currentFlight.value = flight;
-    showFlightModal.value = true;
+    showFlightModal.value = false;
 };
 
 const onFlightSaved = () => {

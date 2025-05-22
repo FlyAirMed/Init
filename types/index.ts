@@ -15,12 +15,19 @@ export enum PassengerType {
   INFANT = 'infant',
 }
 
+export interface BaggageAllowance {
+  cabin: number; // kg
+  checked: number; // kg
+}
+
 export interface FlightSegment {
   from: string;
   to: string;
   departure: string; // ISO date string
   arrival: string; // ISO date string
   duration: string; // formatted like "2h 30min"
+  flightNumber: string;
+  baggageAllowance: BaggageAllowance;
 }
 
 export interface FlightPrices {
@@ -38,6 +45,7 @@ export interface Flight {
   availableSeats: number;
   prices: FlightPrices;
   status: FlightStatus;
+  baggageAllowance: BaggageAllowance;
 }
 
 export const AIRPORTS = {

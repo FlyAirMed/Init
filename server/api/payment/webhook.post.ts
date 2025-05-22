@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { sendMail } from '../../utils/mail';
 import { getDb } from '../../utils/firebase-admin';
+import type { FlightSegment } from '../../../types';
 
 const config = useRuntimeConfig();
 
@@ -41,9 +42,13 @@ interface AdditionalPassenger {
   type: 'adult' | 'child' | 'infant';
 }
 
+interface FlightData {
+  segments: FlightSegment[];
+}
+
 interface BookingData {
   flightId: string;
-  flightData: any;
+  flightData: FlightData;
   contactPerson: ContactPerson;
   additionalPassengers: AdditionalPassenger[];
   amount: number;
@@ -126,13 +131,25 @@ export default defineEventHandler(async (event) => {
 
       // Erstelle eine detaillierte E-Mail für den Admin
       const emailHtml = `
-        <h2>Neue Flugbuchung</h2>
+        <h2>Neue Buchung</h2>
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
           <h3 style="color: #2c5282;">Buchungsdetails</h3>
           <p><strong>Buchungsnummer:</strong> ${metadata.bookingId}</p>
           <p><strong>Flug ID:</strong> ${bookingData.flightId}</p>
           <p><strong>Route:</strong> ${bookingData.metadata.from} → ${bookingData.metadata.to}</p>
           <p><strong>Datum:</strong> ${bookingData.metadata.date}</p>
+          
+          <h4 style="color: #2c5282; margin-top: 20px;">Flugdetails</h4>
+          ${bookingData.flightData.segments.map((segment, index) => `
+            <div style="margin-bottom: 15px; padding: 10px; background-color: white; border-radius: 6px;">
+              <p><strong>Flug ${index + 1}:</strong> ${segment.flightNumber}</p>
+              <p><strong>Route:</strong> ${segment.from} → ${segment.to}</p>
+              <p><strong>Abflug:</strong> ${new Date(segment.departure).toLocaleString()}</p>
+              <p><strong>Ankunft:</strong> ${new Date(segment.arrival).toLocaleString()}</p>
+              <p><strong>Dauer:</strong> ${segment.duration}</p>
+              <p><strong>Gepäck:</strong> ${segment.baggageAllowance.cabin}kg Handgepäck, ${segment.baggageAllowance.checked}kg aufgegebenes Gepäck</p>
+            </div>
+          `).join('')}
           
           <h4 style="color: #2c5282; margin-top: 20px;">Kontaktperson</h4>
           <p><strong>Name:</strong> ${bookingData.contactPerson.firstName} ${bookingData.contactPerson.lastName}</p>
