@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 import { defineEventHandler, readBody, createError } from 'h3';
 import { useRuntimeConfig } from '#imports';
+import { getDb } from '../../utils/firebase-admin';
+import type { Flight } from '../../../types';
 
 const config = useRuntimeConfig();
 const stripe = new Stripe(config.stripeSecretKey, {
@@ -9,9 +11,6 @@ const stripe = new Stripe(config.stripeSecretKey, {
 
 export default defineEventHandler(async (event) => {
   try {
-    console.log(stripe);
-        console.log(config.stripeSecretKey,);
-
     const body = await readBody(event);
     const { amount, currency = 'eur', metadata = {} } = body;
 
@@ -22,8 +21,26 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const bookingDetails = metadata.bookingDetails || {};
-    const description = `Flug von ${bookingDetails.from || ''} nach ${bookingDetails.to || ''}`;
+    // Get flight details from database
+    const db = getDb();
+    const flightDoc = await db.collection('flights').doc(metadata.flightId).get();
+    
+    if (!flightDoc.exists) {
+      throw createError({
+        statusCode: 404,
+        message: 'Flug nicht gefunden',
+      });
+    }
+
+    const flight = flightDoc.data() as Flight;
+    if (!flight) {
+      throw createError({
+        statusCode: 404,
+        message: 'Flugdaten nicht gefunden',
+      });
+    }
+
+    const description = `Flug von ${flight.origin} nach ${flight.destination}`;
 
     // Create price first
     const price = await stripe.prices.create({
@@ -46,11 +63,12 @@ export default defineEventHandler(async (event) => {
         },
       ],
       metadata: {
-        from: bookingDetails.from || '',
-        to: bookingDetails.to || '',
-        date: bookingDetails.date || '',
-        flightNumber: bookingDetails.flightNumber || '',
-        price: String(bookingDetails.price || ''),
+        flightId: metadata.flightId,
+        from: flight.origin,
+        to: flight.destination,
+        date: flight.date,
+        price: String(amount),
+        segments: JSON.stringify(flight.segments),
       },
     });
 

@@ -9,10 +9,15 @@ import {
 } from '../../../types'
 
 export interface FlightSearchParams {
-  origin?: AirportCode;
-  destination?: AirportCode;
-  date?: string; // YYYY-MM-DD format
+  origin: AirportCode;
+  destination: AirportCode;
+  departureDate?: string;
   tripType: TripType;
+  passengers: {
+    adults: number;
+    children: number;
+    infants: number;
+  };
 }
 
 export interface FlightSearchResponse extends ApiResponse<{
@@ -24,7 +29,7 @@ export default defineEventHandler(async (event) => {
   try {
     // Parse the request body
     const body = await readBody<FlightSearchParams>(event)
-    const { origin, destination, date, tripType } = body
+    const { origin, destination, departureDate, tripType, passengers } = body
 
     // Validation
     if (!origin || !destination) {
@@ -45,8 +50,8 @@ export default defineEventHandler(async (event) => {
       .where('status', '==', FlightStatus.ACTIVE)
     
     // If date is provided, filter by that specific date
-    if (date) {
-      query = query.where('date', '==', date)
+    if (departureDate) {
+      query = query.where('date', '==', departureDate)
     }
     
     // Execute the query
@@ -61,7 +66,7 @@ export default defineEventHandler(async (event) => {
     // If we don't have a specific date, collect all available dates
     const availableDates: AvailableDateInfo[] = []
     
-    if (!date && flights.length > 0) {
+    if (!departureDate && flights.length > 0) {
       // Get unique dates from the flights with price and seats info
       const dateMap = new Map<string, AvailableDateInfo>()
       
@@ -78,7 +83,7 @@ export default defineEventHandler(async (event) => {
       // Sort dates chronologically
       dateMap.forEach(dateInfo => availableDates.push(dateInfo))
       availableDates.sort((a, b) => a.date.localeCompare(b.date))
-    } else if (date && flights.length === 0) {
+    } else if (departureDate && flights.length === 0) {
       // If a date was specified but no flights found, find alternative dates
       const allFlightsSnapshot = await flightsRef
         .where('origin', '==', origin)
@@ -110,12 +115,12 @@ export default defineEventHandler(async (event) => {
     
     // For round trips, we also need to check return flights
     let returnFlights: Flight[] = []
-    if (tripType === TripType.ROUND_TRIP && date) {
+    if (tripType === TripType.ROUND_TRIP && departureDate) {
       const returnSnapshot = await flightsRef
         .where('origin', '==', destination)
         .where('destination', '==', origin)
         .where('status', '==', FlightStatus.ACTIVE)
-        .where('date', '>=', date) // Return date must be same or after departure
+        .where('date', '>=', departureDate) // Return date must be same or after departure
         .get()
         
       returnFlights = returnSnapshot.docs.map(doc => ({

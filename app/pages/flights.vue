@@ -211,7 +211,8 @@
                             from: AIRPORTS[selectedFlight?.origin]?.name,
                             to: AIRPORTS[selectedFlight?.destination]?.name,
                             date: formatDate(selectedFlight?.date),
-                            price: calculateTotalPrice(selectedFlight)
+                            prices: selectedFlight?.prices,
+                            passengers: searchParams?.passengers
                         }" @success="handlePaymentSuccess" @error="handlePaymentError" />
                     </UCard>
                 </div>
@@ -335,11 +336,15 @@ const calculateTotalPrice = (flight) => {
     if (!searchParams.value) return flight.prices.adult || 0;
 
     const { adults = 1, children = 0, infants = 0 } = searchParams.value.passengers || {};
-    return (
+
+    // Berechne den Gesamtpreis in Euro (nicht in Cent)
+    const totalPrice = (
         (flight.prices.adult * adults) +
         (flight.prices.child * children) +
         (flight.prices.infant * infants)
     );
+
+    return totalPrice;
 };
 
 const handlePaymentSuccess = () => {
@@ -370,20 +375,53 @@ const handlePaymentError = (error) => {
 // Add flight selection handler
 const selectFlight = (flight) => {
     selectedFlight.value = flight;
+    // Update URL with flight ID
+    const route = useRoute();
+    const query = { ...route.query, flightId: flight.id };
+    navigateTo({ query });
     handleNextStep();
+};
+
+// Update search function to use direct query parameters
+const handleSearch = async (searchData) => {
+    const query = {
+        origin: searchData.origin,
+        destination: searchData.destination,
+        tripType: searchData.tripType,
+        adults: searchData.passengers.adults,
+        children: searchData.passengers.children,
+        infants: searchData.passengers.infants,
+        departureDate: searchData.departureDate
+    };
+
+    // Navigate to flights page with search parameters
+    navigateTo({
+        path: '/flights',
+        query
+    });
 };
 
 onMounted(async () => {
     try {
         const route = useRoute();
-        const search = JSON.parse(atob(route.query.search || '{}'));
-        const results = JSON.parse(atob(route.query.results || '{}'));
+        const flightId = route.query.id;
 
-        if (search) {
-            searchParams.value = search;
-        }
-        if (results.flights) {
-            flights.value = results.flights;
+        if (flightId) {
+            // Fetch flight details by ID
+            const { data } = await useFetch(`/api/flights/${flightId}`);
+            if (data.value?.success) {
+                selectedFlight.value = data.value.data.flight;
+                flights.value = [selectedFlight.value];
+
+                // Set passenger information from URL
+                searchParams.value = {
+                    passengers: {
+                        adults: Number(route.query.adults) || 1,
+                        children: Number(route.query.children) || 0,
+                        infants: Number(route.query.infants) || 0
+                    }
+                };
+            }
         }
     } catch (error) {
         console.error('Error loading flight data:', error);

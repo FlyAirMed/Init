@@ -18,16 +18,16 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-    stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
     smtpHost: process.env.SMTP_HOST,
     smtpPort: process.env.SMTP_PORT,
     smtpUser: process.env.SMTP_USER,
     smtpPassword: process.env.SMTP_PASSWORD,
     adminEmail: process.env.ADMIN_EMAIL,
+    emailFrom: process.env.EMAIL_FROM,
     public: {
-      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      stripePaymentLinkId: process.env.STRIPE_PAYMENT_LINK_ID,
+      stripePublicKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
     },
   },
 

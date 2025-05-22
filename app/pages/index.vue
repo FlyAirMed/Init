@@ -236,7 +236,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.adults
-                        }}</span>
+                          }}</span>
                         <button @click="
                           incrementPassenger(
                             'adults'
@@ -279,7 +279,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.children
-                        }}</span>
+                          }}</span>
                         <button @click="
                           incrementPassenger(
                             'children'
@@ -322,7 +322,7 @@
                         </button>
                         <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                           passengers.infants
-                        }}</span>
+                          }}</span>
                         <button @click="
                           incrementPassenger(
                             'infants'
@@ -654,12 +654,14 @@ const handleBooking = async () => {
     });
 
     if (response.success && response.data) {
-      // Navigate to results page with the search data
+      // Navigate to results page with flight ID and passenger info
       navigateTo({
         path: '/flights',
         query: {
-          search: btoa(JSON.stringify(searchParams)),
-          results: btoa(JSON.stringify(response.data))
+          id: response.data.flights[0].id,
+          adults: searchParams.passengers.adults,
+          children: searchParams.passengers.children,
+          infants: searchParams.passengers.infants
         }
       });
     } else if (response.error) {
