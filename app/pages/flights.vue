@@ -38,7 +38,7 @@
                 <div class="w-fit">
                     <!-- Flight selection content -->
                     <!-- Flight Cards -->
-                    <div class="grid gap-8">
+                    <div class="grid gap-8" v-if="activeStep < 2">
                         <div v-for="flight in flights" :key="flight.id"
                             class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200/30 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
                             <!-- Flight Header -->

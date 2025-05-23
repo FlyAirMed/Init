@@ -68,8 +68,8 @@
     </div>
 
     <div class="payment-button">
-      <UButton @click="createPaymentLink" :loading="loading" color="blue" size="xl"
-        class="w-full h-14 text-lg font-semibold" :disabled="loading">
+      <UButton @click="createPaymentLink" :loading="loading" size="xl" class="w-full h-14 text-lg font-semibold"
+        :disabled="loading">
         <template v-if="loading">
           <UIcon name="i-heroicons-arrow-path" class="animate-spin h-5 w-5 mr-2" />
           Wird verarbeitet...
