@@ -126,16 +126,16 @@
                                                         <div>
                                                             <div class="text-base font-medium text-gray-800">
                                                                 {{ AIRPORTS[segment.from].name }} → {{
-                                                                AIRPORTS[segment.to].name }}
+                                                                    AIRPORTS[segment.to].name }}
                                                             </div>
                                                             <div class="text-sm text-gray-600">
                                                                 {{ formatSegmentTime(segment.departure) }} - {{
-                                                                formatSegmentTime(segment.arrival) }}
+                                                                    formatSegmentTime(segment.arrival) }}
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="text-base font-semibold text-gray-700">{{
-                                                        segment.duration }}</div>
+                                                        calculateDuration(segment.departure, segment.arrival) }}</div>
                                                 </div>
 
                                                 <!-- Segment Details -->
@@ -213,8 +213,8 @@
                                                         pro Person gültig. Bei {{
                                                             searchParams?.passengers?.adults || 1 }} Erwachsenen stehen
                                                         insgesamt {{
-                                                        searchParams?.passengers?.adults || 1 }}x Handgepäck und {{
-                                                        searchParams?.passengers?.adults || 1
+                                                            searchParams?.passengers?.adults || 1 }}x Handgepäck und {{
+                                                            searchParams?.passengers?.adults || 1
                                                         }}x 23kg Aufgabegepäck zur Verfügung.
                                                     </div>
                                                 </div>
@@ -383,11 +383,32 @@ const formatDate = (dateString) => {
 
 // Format segment time
 const formatSegmentTime = (dateString) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleTimeString('de-DE', {
-        hour: '2-digit',
-        minute: '2-digit'
+    return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
     });
+};
+
+// Calculate duration between two times
+const calculateDuration = (departureTime, arrivalTime) => {
+    if (!departureTime || !arrivalTime) return '-- : --';
+
+    // Convert ISO strings to time strings first, just like in FlightEditModal
+    const depTimeStr = new Date(departureTime).toTimeString().slice(0, 5);
+    const arrTimeStr = new Date(arrivalTime).toTimeString().slice(0, 5);
+
+    const [depHours, depMinutes] = depTimeStr.split(':').map(Number);
+    const [arrHours, arrMinutes] = arrTimeStr.split(':').map(Number);
+
+    let durationMinutes = (arrHours * 60 + arrMinutes) - (depHours * 60 + depMinutes);
+    if (durationMinutes < 0) durationMinutes += 24 * 60; // Handle next day arrival
+
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+    return `${hours}h ${minutes}min`;
 };
 
 // Calculate total price for a flight

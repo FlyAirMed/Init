@@ -696,6 +696,7 @@ watch(() => props.flight, (newFlight) => {
 
 // Compute flight duration
 const calculateDuration = (departureTime, arrivalTime) => {
+    debugger;
     const [depHours, depMinutes] = departureTime.split(':').map(Number);
     const [arrHours, arrMinutes] = arrivalTime.split(':').map(Number);
 
