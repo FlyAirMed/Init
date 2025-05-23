@@ -100,7 +100,7 @@
                             </td>
                             <td class="p-2">
                                 <div class="flex space-x-2">
-                                    <button @click="editFlight(flight)"
+                                    <button @click="editFlight(flight)" style="cursor: pointer;"
                                         class="p-1 text-blue-600 hover:text-blue-800 transition-colors"
                                         title="Bearbeiten">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -110,7 +110,7 @@
                                             </path>
                                         </svg>
                                     </button>
-                                    <button @click="confirmDeleteFlight(flight)"
+                                    <button @click="confirmDeleteFlight(flight)" style="cursor: pointer;"
                                         class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Löschen">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -129,13 +129,13 @@
 
         <!-- Delete Confirmation Modal -->
         <div v-if="showDeleteModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            class="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Flug löschen</h3>
                 <p class="text-gray-600 mb-6">
                     Sind Sie sicher, dass Sie den Flug von <strong>{{ flightToDelete?.origin }}</strong> nach
                     <strong>{{ flightToDelete?.destination }}</strong> am <strong>{{ formatDate(flightToDelete?.date)
-                        }}</strong> löschen möchten?
+                    }}</strong> löschen möchten?
                 </p>
                 <div class="flex justify-end space-x-3">
                     <button @click="showDeleteModal = false"
@@ -169,7 +169,7 @@ const showDeleteModal = ref(false);
 const flightToDelete = ref(null);
 const searchQuery = ref('');
 const statusFilter = ref('');
-const showFlightModal = ref(false); // todo: set to false initially
+const showFlightModal = ref(false);
 const currentFlight = ref(null);
 
 // Computed
@@ -223,7 +223,7 @@ const openCreateModal = () => {
 
 const editFlight = (flight) => {
     currentFlight.value = flight;
-    showFlightModal.value = false;
+    showFlightModal.value = true;
 };
 
 const onFlightSaved = () => {

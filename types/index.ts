@@ -52,7 +52,8 @@ export const AIRPORTS = {
   VIE: { code: 'VIE', name: 'Vienna' },
   CGN: { code: 'CGN', name: 'Cologne/Bonn' },
   ATH: { code: 'ATH', name: 'Athens' },
-  DAM: { code: 'DAM', name: 'Damascus' }
+  DAM: { code: 'DAM', name: 'Damascus' },
+  BER: { code: 'BER', name: 'Berlin Brandenburg' }
 } as const;
 
 export type AirportCode = keyof typeof AIRPORTS;
