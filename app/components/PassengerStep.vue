@@ -72,7 +72,10 @@ const validatePhone = (phone: string) => {
 };
 
 const validatePostalCode = (postalCode: string) => {
-    return /^\d{5}$/.test(postalCode);
+    // Remove any spaces or special characters
+    const cleanPostalCode = postalCode.replace(/[\s-]/g, '');
+    // Allow 4-5 digits for international postal codes
+    return /^\d{4,5}$/.test(cleanPostalCode);
 };
 
 const calculateAge = (birthDate: CalendarDate | null) => {
@@ -223,11 +226,35 @@ const isFormValid = computed(() => {
     return contactValid && additionalValid;
 });
 
+// Check if all fields have been filled (regardless of validity)
+const areAllFieldsFilled = computed(() => {
+    // Check contact person fields
+    const contactFilled =
+        contactPerson.value.firstName.length > 0 &&
+        contactPerson.value.lastName.length > 0 &&
+        contactPerson.value.birthDate &&
+        contactPerson.value.email.length > 0 &&
+        contactPerson.value.phone.length > 0 &&
+        contactPerson.value.address.street.length > 0 &&
+        contactPerson.value.address.postalCode.length > 0 &&
+        contactPerson.value.address.city.length > 0 &&
+        contactPerson.value.address.country.length > 0;
+
+    // Check additional passengers fields
+    const additionalFilled = additionalPassengers.value.every(passenger =>
+        passenger.firstName.length > 0 &&
+        passenger.lastName.length > 0 &&
+        passenger.birthDate
+    );
+
+    return contactFilled && additionalFilled;
+});
+
 // Initialize additional passengers based on props
 const initializeAdditionalPassengers = () => {
     additionalPassengers.value = [];
 
-    // Add adults
+// Add adults
     for (let i = 0; i < props.totalAdults - 1; i++) {
         additionalPassengers.value.push({
             firstName: '',
@@ -275,6 +302,60 @@ watch([contactPerson, additionalPassengers], () => {
 
 <template>
     <div class="space-y-8">
+        <!-- Validation Summary - Only show when all fields are filled but some are invalid -->
+        <div v-if="!isFormValid && areAllFieldsFilled"
+            class="sticky top-4 z-50 bg-red-50 border-2 border-red-300 rounded-lg p-4 shadow-lg">
+            <div class="flex items-center gap-2 mb-2">
+                <UIcon name="i-heroicons-exclamation-triangle" class="h-6 w-6 text-red-500" />
+                <h3 class="text-lg font-bold text-red-700">Bitte korrigieren Sie die folgenden Felder</h3>
+            </div>
+
+            <!-- Contact Person Validation -->
+            <div v-if="!formValidation.contactPerson.firstName || !formValidation.contactPerson.lastName || !formValidation.contactPerson.birthDate || !formValidation.contactPerson.email || !formValidation.contactPerson.phone || !formValidation.contactPerson.address.street || !formValidation.contactPerson.address.postalCode || !formValidation.contactPerson.address.city || !formValidation.contactPerson.address.country"
+                class="mt-2">
+                <h4 class="font-medium text-red-700 mb-1">Kontaktperson:</h4>
+                <ul class="list-disc list-inside text-red-600 space-y-1">
+                    <li v-if="!formValidation.contactPerson.firstName && contactPerson.firstName">Vorname ist ungültig
+                    </li>
+                    <li v-if="!formValidation.contactPerson.lastName && contactPerson.lastName">Nachname ist ungültig
+                    </li>
+                    <li v-if="!formValidation.contactPerson.birthDate && contactPerson.birthDate">Geburtsdatum ist
+                        ungültig</li>
+                    <li v-if="!formValidation.contactPerson.email && contactPerson.email">E-Mail ist ungültig</li>
+                    <li v-if="!formValidation.contactPerson.phone && contactPerson.phone">Telefonnummer ist ungültig
+                    </li>
+                    <li v-if="!formValidation.contactPerson.address.street && contactPerson.address.street">Straße ist
+                        ungültig</li>
+                    <li v-if="!formValidation.contactPerson.address.postalCode && contactPerson.address.postalCode">PLZ
+                        ist ungültig</li>
+                    <li v-if="!formValidation.contactPerson.address.city && contactPerson.address.city">Ort ist ungültig
+                    </li>
+                    <li v-if="!formValidation.contactPerson.address.country && contactPerson.address.country">Land ist
+                        ungültig</li>
+                </ul>
+            </div>
+
+            <!-- Additional Passengers Validation -->
+            <div v-if="additionalPassengers.length > 0" class="mt-4">
+                <div v-for="(passenger, index) in additionalPassengers" :key="index">
+                    <div v-if="!passenger.firstName || !passenger.lastName || !passenger.birthDate || !validateBirthDate(passenger.birthDate, passenger.type)"
+                        class="mt-2">
+                        <h4 class="font-medium text-red-700 mb-1">
+                            {{ passenger.type === 'adult' ? 'Erwachsener' : passenger.type === 'child' ? 'Kind' :
+                            'Säugling' }} {{ index + 1 }}:
+                        </h4>
+                        <ul class="list-disc list-inside text-red-600 space-y-1">
+                            <li v-if="!passenger.firstName && passenger.firstName">Vorname ist ungültig</li>
+                            <li v-if="!passenger.lastName && passenger.lastName">Nachname ist ungültig</li>
+                            <li v-if="!passenger.birthDate || !validateBirthDate(passenger.birthDate, passenger.type)">
+                                Geburtsdatum ist ungültig
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Contact Person Section -->
         <div class="bg-white rounded-lg shadow p-8">
             <h2 class="text-2xl font-semibold mb-8">Kontaktperson</h2>
@@ -303,7 +384,7 @@ watch([contactPerson, additionalPassengers], () => {
                                 :state="formValidation.contactPerson.birthDate ? undefined : false"
                                 class="w-full justify-start">
                                 {{ contactPerson.birthDate ?
-                                    df.format(contactPerson.birthDate.toDate(getLocalTimeZone())) : 'Geburtsdatum auswählen'
+                                df.format(contactPerson.birthDate.toDate(getLocalTimeZone())) : 'Geburtsdatum auswählen'
                                 }}
                             </UButton>
 
@@ -388,7 +469,7 @@ watch([contactPerson, additionalPassengers], () => {
                     <h3 class="text-xl font-medium">
                         {{ passenger.type === 'adult' ? 'Erwachsener' : passenger.type === 'child' ? 'Kind' : 'Säugling'
                         }} {{
-                            index + 1 }}
+                        index + 1 }}
                     </h3>
                 </div>
 
@@ -416,7 +497,7 @@ watch([contactPerson, additionalPassengers], () => {
                                     :state="passenger.birthDate ? validateBirthDate(passenger.birthDate, passenger.type) ? undefined : false : false"
                                     class="w-full justify-start">
                                     {{ passenger.birthDate ? df.format(passenger.birthDate.toDate(getLocalTimeZone())) :
-                                        'Geburtsdatum auswählen' }}
+                                    'Geburtsdatum auswählen' }}
                                 </UButton>
 
                                 <template #content>

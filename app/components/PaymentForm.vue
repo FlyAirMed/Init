@@ -77,9 +77,6 @@
                 <UIcon name="i-heroicons-user" class="h-4 w-4 text-gray-500" />
                 <span class="text-gray-600">Erwachsene ({{ bookingDetails.passengers.adults }})</span>
               </div>
-              <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.adult *
-                bookingDetails.passengers.adults)
-              }}€</span>
             </div>
             <div v-if="bookingDetails?.passengers?.children" class="flex justify-between items-center">
               <div class="flex items-center gap-2">
