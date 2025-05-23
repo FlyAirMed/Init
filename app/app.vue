@@ -79,3 +79,22 @@
   font-weight: 400 !important;
 }
 </style>
+
+
+<script setup>
+
+const neutral = computed({
+  get() {
+    return appConfig.ui.colors.neutral;
+  },
+  set(option) {
+    appConfig.ui.colors.neutral = option;
+    window.localStorage.setItem('nuxt-ui-neutral', appConfig.ui.colors.neutral);
+  },
+});
+
+onMounted(() => {
+  const neutral = window.localStorage.setItem('nuxt-color-mode', 'light');
+
+});
+</script>
