@@ -10,6 +10,12 @@ export default defineNuxtConfig({
     compatibilityVersion: 4
   },
 
+  colorMode: {
+    preference: 'light', // oder 'light' / 'dark'
+    fallback: 'light', 
+    classSuffix: 'light'       // Setzt nur "dark" als Klasse, kein "-light"
+  },
+
   compatibilityDate: '2024-11-27',
 
   runtimeConfig: {
@@ -21,6 +27,7 @@ export default defineNuxtConfig({
     smtpPassword: process.env.SMTP_PASSWORD,
     adminEmail: process.env.ADMIN_EMAIL,
     emailFrom: process.env.EMAIL_FROM,
+    adminPassword: process.env.ADMIN_PASSWORD,
     public: {
       stripePublicKey: process.env.STRIPE_PUBLISHABLE_KEY,
       publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',

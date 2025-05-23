@@ -296,6 +296,20 @@ const formatStatus = (status) => {
     }
 };
 
+// Überprüfe die Authentifizierung beim Laden der Seite
+onMounted(async () => {
+    try {
+        const response = await $fetch('/api/admin/auth/check');
+        if (!response.success) {
+            // Wenn nicht authentifiziert, zur Login-Seite weiterleiten
+            navigateTo('/admin/login');
+        }
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        navigateTo('/admin/login');
+    }
+});
+
 // Load flights on component mount
 onMounted(() => {
     loadFlights();

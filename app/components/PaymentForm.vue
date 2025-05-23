@@ -38,7 +38,7 @@
               <div class="flex items-center gap-4">
                 <span class="text-gray-600">{{ bookingDetails?.date }}</span>
                 <span class="text-blue-600 font-semibold">{{ formatAmount(calculateFlightPrice(bookingDetails?.prices))
-                }}€</span>
+                  }}€</span>
               </div>
             </div>
             <!-- Return Flight -->
@@ -46,7 +46,7 @@
               <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-arrow-left" class="h-4 w-4 text-gray-500" />
                 <span class="text-gray-600">Rückflug: {{ bookingDetails?.returnFrom }} → {{ bookingDetails?.returnTo
-                }}</span>
+                  }}</span>
               </div>
               <div class="flex items-center gap-4">
                 <span class="text-gray-600">{{ bookingDetails?.returnDate }}</span>
@@ -79,7 +79,7 @@
               </div>
               <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.adult *
                 bookingDetails.passengers.adults)
-                }}€</span>
+              }}€</span>
             </div>
             <div v-if="bookingDetails?.passengers?.children" class="flex justify-between items-center">
               <div class="flex items-center gap-2">
@@ -88,7 +88,7 @@
               </div>
               <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.child *
                 bookingDetails.passengers.children)
-                }}€</span>
+              }}€</span>
             </div>
             <div v-if="bookingDetails?.passengers?.infants" class="flex justify-between items-center">
               <div class="flex items-center gap-2">
@@ -97,7 +97,7 @@
               </div>
               <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.infant *
                 bookingDetails.passengers.infants)
-                }}€</span>
+              }}€</span>
             </div>
           </div>
         </div>

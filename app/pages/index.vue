@@ -274,7 +274,7 @@
                           </button>
                           <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                             passengers.adults
-                          }}</span>
+                            }}</span>
                           <button @click="
                             incrementPassenger(
                               'adults'
@@ -317,7 +317,7 @@
                           </button>
                           <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                             passengers.children
-                          }}</span>
+                            }}</span>
                           <button @click="
                             incrementPassenger(
                               'children'
@@ -360,7 +360,7 @@
                           </button>
                           <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                             passengers.infants
-                          }}</span>
+                            }}</span>
                           <button @click="
                             incrementPassenger(
                               'infants'

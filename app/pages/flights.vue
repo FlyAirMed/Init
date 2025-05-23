@@ -33,6 +33,23 @@
                     style=" color: white !important; " />
             </div>
 
+            <!-- Error Message -->
+            <div v-if="error" class="flex justify-center items-center min-h-[400px]">
+                <div class="text-center">
+                    <UIcon name="i-heroicons-exclamation-triangle" class="h-12 w-12 text-red-500 mb-4" />
+                    <p class="text-white text-lg">{{ error }}</p>
+                    <p class="text-white text-sm mt-2">Sie werden in Kürze zur Startseite weitergeleitet...</p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-else-if="isLoading" class="flex justify-center items-center min-h-[400px]">
+                <div class="text-center">
+                    <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-white animate-spin mb-4" />
+                    <p class="text-white text-lg">Flüge werden geladen...</p>
+                </div>
+            </div>
+
             <!-- Content based on active step -->
             <div class=" flex justify-center">
                 <div class="w-fit">
@@ -66,7 +83,7 @@
                                                 <div class="flex items-center">
                                                     <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
                                                     <div class="text-lg font-bold">{{ calculateTotalPrice(flight)
-                                                    }}€
+                                                        }}€
                                                     </div>
                                                 </div>
                                             </div>
@@ -120,7 +137,7 @@
                                                 </div>
                                                 <div class="text-base font-semibold text-gray-700">{{
                                                     segment.duration
-                                                }}
+                                                    }}
                                                 </div>
                                             </div>
 
@@ -149,7 +166,7 @@
                                                     <div class="text-base font-semibold text-gray-800">{{
                                                         formatSegmentTime(segment.arrival) }}</div>
                                                     <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -226,7 +243,7 @@
                     </div>
 
                     <!-- Navigation Buttons - Moved outside the flight card loop -->
-                    <div class="mt-6 flex justify-between">
+                    <div v-if="!isLoading && activeStep < 0" class="mt-6 flex justify-between">
                         <!-- go back Button -->
                         <UButton size="lg" class="px-8" @click="navigateTo('/')">
                             <template #icon>
@@ -299,6 +316,8 @@ const selectedFlight = ref(null);
 const selectedReturnFlight = ref(null);
 const isPassengerFormValid = ref(false);
 const passengerData = ref(null);
+const isLoading = ref(true);
+const error = ref('');
 
 const stepperItems = [
     {
@@ -375,20 +394,18 @@ const calculateTotalPrice = (flight) => {
     const { adults = 1, children = 0, infants = 0 } = searchParams.value.passengers || {};
 
     // Calculate price for the current flight
-    const currentFlightPrice = (
-        (flight.prices.adult * adults) +
-        (flight.prices.child * children) +
-        (flight.prices.infant * infants)
-    );
+    const adultTotal = Number(flight.prices.adult) * Number(adults);
+    const childTotal = Number(flight.prices.child) * Number(children);
+    const infantTotal = Number(flight.prices.infant) * Number(infants);
+    const currentFlightPrice = Number((adultTotal + childTotal + infantTotal).toFixed(2));
 
     // If this is the outbound flight and we have a return flight, add its price
     if (flight.id === selectedFlight.value?.id && selectedReturnFlight.value) {
-        const returnFlightPrice = (
-            (selectedReturnFlight.value.prices.adult * adults) +
-            (selectedReturnFlight.value.prices.child * children) +
-            (selectedReturnFlight.value.prices.infant * infants)
-        );
-        return currentFlightPrice + returnFlightPrice;
+        const returnAdultTotal = Number(selectedReturnFlight.value.prices.adult) * Number(adults);
+        const returnChildTotal = Number(selectedReturnFlight.value.prices.child) * Number(children);
+        const returnInfantTotal = Number(selectedReturnFlight.value.prices.infant) * Number(infants);
+        const returnFlightPrice = Number((returnAdultTotal + returnChildTotal + returnInfantTotal).toFixed(2));
+        return Number((currentFlightPrice + returnFlightPrice).toFixed(2));
     }
 
     return currentFlightPrice;
@@ -396,38 +413,73 @@ const calculateTotalPrice = (flight) => {
 
 onMounted(async () => {
     try {
+        isLoading.value = true;
+        error.value = '';
         const route = useRoute();
         const flightId = route.query.id;
         const returnFlightId = route.query.returnId;
 
-        if (flightId) {
-            // Fetch departure flight details by ID
-            const { data: departureData } = await useFetch(`/api/flights/${flightId}`);
-            if (departureData.value?.success) {
-                selectedFlight.value = departureData.value.data.flight;
-                flights.value = [selectedFlight.value];
+        if (!flightId) {
+            throw new Error('Keine Flug-ID gefunden');
+        }
 
-                // If it's a round trip and we have a return flight ID, fetch that too
-                if (returnFlightId) {
-                    const { data: returnData } = await useFetch(`/api/flights/${returnFlightId}`);
-                    if (returnData.value?.success) {
-                        selectedReturnFlight.value = returnData.value.data.flight;
-                        flights.value.push(selectedReturnFlight.value);
-                    }
+        // Fetch departure flight details by ID
+        const { data: departureData, error: departureError } = await useFetch(`/api/flights/${flightId}`, {
+            key: `flight-${flightId}`,
+            transform: (response) => {
+                if (!response?.success) {
+                    throw new Error('Flugdaten konnten nicht geladen werden');
                 }
+                return response;
+            }
+        });
 
-                // Set passenger information from URL
-                searchParams.value = {
-                    passengers: {
-                        adults: Number(route.query.adults) || 1,
-                        children: Number(route.query.children) || 0,
-                        infants: Number(route.query.infants) || 0
+        if (departureError.value) {
+            throw new Error('Fehler beim Laden der Flugdaten');
+        }
+
+        selectedFlight.value = departureData.value.data.flight;
+        flights.value = [selectedFlight.value];
+
+        // If it's a round trip and we have a return flight ID, fetch that too
+        if (returnFlightId) {
+            const { data: returnData, error: returnError } = await useFetch(`/api/flights/${returnFlightId}`, {
+                key: `flight-${returnFlightId}`,
+                transform: (response) => {
+                    if (!response?.success) {
+                        throw new Error('Rückflugdaten konnten nicht geladen werden');
                     }
-                };
+                    return response;
+                }
+            });
+
+            if (returnError.value) {
+                throw new Error('Fehler beim Laden der Rückflugdaten');
+            }
+
+            if (returnData.value?.success) {
+                selectedReturnFlight.value = returnData.value.data.flight;
+                flights.value.push(selectedReturnFlight.value);
             }
         }
-    } catch (error) {
-        console.error('Error loading flight data:', error);
+
+        // Set passenger information from URL
+        searchParams.value = {
+            passengers: {
+                adults: Number(route.query.adults) || 1,
+                children: Number(route.query.children) || 0,
+                infants: Number(route.query.infants) || 0
+            }
+        };
+    } catch (err) {
+        console.error('Error loading flight data:', err);
+        error.value = err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten';
+        // Navigate back to home page after 3 seconds
+        setTimeout(() => {
+            navigateTo('/');
+        }, 3000);
+    } finally {
+        isLoading.value = false;
     }
 });
 </script>
