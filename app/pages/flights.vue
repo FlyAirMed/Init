@@ -221,27 +221,26 @@
                                         @update:passengers="handlePassengerData"
                                         @form-valid="handlePassengerFormValid" />
                                 </div>
-
-                                <!-- Booking Button -->
-                                <div class="mt-6 flex justify-between">
-                                    <!-- go back Button -->
-                                    <UButton size="lg" class="px-8" @click="navigateTo('/')">
-                                        <template #icon>
-                                            <UIcon name="i-heroicons-arrow-left" class="h-5 w-5" />
-                                        </template>
-                                        Zurück zur Flugauswahl
-                                    </UButton>
-                                    <UButton size="lg" class="px-8" @click="nextStep()"
-                                        :disabled="activeStep === 1 && !isPassengerFormValid">
-                                        Weiter
-                                        <template #trailing>
-                                            <UIcon name="fluent-emoji-high-contrast:airplane-departure"
-                                                class="h-5 w-5" />
-                                        </template>
-                                    </UButton>
-                                </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Navigation Buttons - Moved outside the flight card loop -->
+                    <div class="mt-6 flex justify-between">
+                        <!-- go back Button -->
+                        <UButton size="lg" class="px-8" @click="navigateTo('/')">
+                            <template #icon>
+                                <UIcon name="i-heroicons-arrow-left" class="h-5 w-5" />
+                            </template>
+                            Zurück zur Flugauswahl
+                        </UButton>
+                        <UButton size="lg" class="px-8" @click="nextStep()"
+                            :disabled="activeStep === 1 && !isPassengerFormValid">
+                            Weiter
+                            <template #trailing>
+                                <UIcon name="fluent-emoji-high-contrast:airplane-departure" class="h-5 w-5" />
+                            </template>
+                        </UButton>
                     </div>
                 </div>
                 <div v-if="activeStep === 2" class="w-full max-w-4xl">
@@ -255,10 +254,15 @@
                         </template>
                         <PaymentForm :amount="calculateTotalPrice(selectedFlight)" currency="eur" :booking-details="{
                             flightNumber: selectedFlight?.id,
+                            returnFlightNumber: selectedReturnFlight?.id,
                             from: AIRPORTS[selectedFlight?.origin]?.name,
                             to: AIRPORTS[selectedFlight?.destination]?.name,
                             date: formatDate(selectedFlight?.date),
+                            returnFrom: selectedReturnFlight ? AIRPORTS[selectedReturnFlight?.origin]?.name : undefined,
+                            returnTo: selectedReturnFlight ? AIRPORTS[selectedReturnFlight?.destination]?.name : undefined,
+                            returnDate: selectedReturnFlight ? formatDate(selectedReturnFlight?.date) : undefined,
                             prices: selectedFlight?.prices,
+                            returnPrices: selectedReturnFlight?.prices,
                             passengers: searchParams?.passengers
                         }" :contact-person="passengerData?.contactPerson"
                             :additional-passengers="passengerData?.additionalPassengers" @success="handlePaymentSuccess"
@@ -292,21 +296,9 @@ const flights = ref([]);
 const searchParams = ref(null);
 const activeStep = ref(0);
 const selectedFlight = ref(null);
+const selectedReturnFlight = ref(null);
 const isPassengerFormValid = ref(false);
 const passengerData = ref(null);
-
-const contactPerson = ref({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    address: '',
-    zip: '',
-    city: '',
-    country: ''
-});
-
 
 const stepperItems = [
     {
@@ -382,29 +374,47 @@ const calculateTotalPrice = (flight) => {
 
     const { adults = 1, children = 0, infants = 0 } = searchParams.value.passengers || {};
 
-    // Berechne den Gesamtpreis in Euro (nicht in Cent)
-    const totalPrice = (
+    // Calculate price for the current flight
+    const currentFlightPrice = (
         (flight.prices.adult * adults) +
         (flight.prices.child * children) +
         (flight.prices.infant * infants)
     );
 
-    return totalPrice;
+    // If this is the outbound flight and we have a return flight, add its price
+    if (flight.id === selectedFlight.value?.id && selectedReturnFlight.value) {
+        const returnFlightPrice = (
+            (selectedReturnFlight.value.prices.adult * adults) +
+            (selectedReturnFlight.value.prices.child * children) +
+            (selectedReturnFlight.value.prices.infant * infants)
+        );
+        return currentFlightPrice + returnFlightPrice;
+    }
+
+    return currentFlightPrice;
 };
-
-
 
 onMounted(async () => {
     try {
         const route = useRoute();
         const flightId = route.query.id;
+        const returnFlightId = route.query.returnId;
 
         if (flightId) {
-            // Fetch flight details by ID
-            const { data } = await useFetch(`/api/flights/${flightId}`);
-            if (data.value?.success) {
-                selectedFlight.value = data.value.data.flight;
+            // Fetch departure flight details by ID
+            const { data: departureData } = await useFetch(`/api/flights/${flightId}`);
+            if (departureData.value?.success) {
+                selectedFlight.value = departureData.value.data.flight;
                 flights.value = [selectedFlight.value];
+
+                // If it's a round trip and we have a return flight ID, fetch that too
+                if (returnFlightId) {
+                    const { data: returnData } = await useFetch(`/api/flights/${returnFlightId}`);
+                    if (returnData.value?.success) {
+                        selectedReturnFlight.value = returnData.value.data.flight;
+                        flights.value.push(selectedReturnFlight.value);
+                    }
+                }
 
                 // Set passenger information from URL
                 searchParams.value = {

@@ -651,6 +651,16 @@ watch(() => dateRange.value.start, async (newDate) => {
 }, { immediate: false });
 
 const handleBooking = async () => {
+  console.log('Search button clicked');
+  console.log('Current state:', {
+    departure: departure.value,
+    arrival: arrival.value,
+    tripType: tripType.value,
+    dateRange: dateRange.value,
+    singleDate: singleDate.value,
+    passengers: passengers
+  });
+
   if (!departure.value || !arrival.value) {
     errorMessage.value = "Please select both departure and destination airports.";
     return;
@@ -680,29 +690,40 @@ const handleBooking = async () => {
       searchParams.departureDate = toDateString(singleDate.value);
     }
 
+    console.log('Sending search request with params:', searchParams);
+
     // Call the flight search API
     const response = await $fetch('/api/flights/search', {
       method: 'POST',
       body: searchParams
     });
 
+    console.log('Search response:', response);
+
     if (response.success && response.data) {
       // Navigate to results page with flight ID and passenger info
+      const queryParams = {
+        id: response.data.flights[0].id,
+        adults: searchParams.passengers.adults,
+        children: searchParams.passengers.children,
+        infants: searchParams.passengers.infants
+      };
+
+      // If it's a round trip and we have a return flight, add its ID
+      if (tripType.value === TripType.ROUND_TRIP && response.data.flights.length > 1) {
+        queryParams.returnId = response.data.flights[1].id;
+      }
+
       navigateTo({
         path: '/flights',
-        query: {
-          id: response.data.flights[0].id,
-          adults: searchParams.passengers.adults,
-          children: searchParams.passengers.children,
-          infants: searchParams.passengers.infants
-        }
+        query: queryParams
       });
     } else if (response.error) {
       errorMessage.value = response.error.message;
     }
   } catch (error) {
-    errorMessage.value = "An unexpected error occurred. Please try again.";
     console.error('Error in handleBooking:', error);
+    errorMessage.value = "An unexpected error occurred. Please try again.";
   } finally {
     isSearchingFlights.value = false;
   }

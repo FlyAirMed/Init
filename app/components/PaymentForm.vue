@@ -1,7 +1,7 @@
 <template>
   <div class="payment-form">
     <!-- Success Message -->
-    <UAlert v-if="showSuccess" color="green" variant="soft" icon="i-heroicons-check-circle" class="mb-4">
+    <UAlert v-if="showSuccess" color="success" variant="soft" icon="i-heroicons-check-circle" class="mb-4">
       <template #title>Zahlung erfolgreich!</template>
       <template #description>
         Sie erhalten in Kürze eine E-Mail mit Ihren Flugtickets. Bitte überprüfen Sie auch Ihren Spam-Ordner.
@@ -9,7 +9,7 @@
     </UAlert>
 
     <!-- Error Message -->
-    <UAlert v-if="errorMessage" color="red" variant="soft" icon="i-heroicons-exclamation-triangle" class="mb-4">
+    <UAlert v-if="errorMessage" color="error" variant="soft" icon="i-heroicons-exclamation-triangle" class="mb-4">
       {{ errorMessage }}
     </UAlert>
 
@@ -28,10 +28,40 @@
             <UIcon name="i-heroicons-paper-airplane" class="h-5 w-5 text-blue-600" />
             <h4 class="font-semibold text-gray-800">Flugdetails</h4>
           </div>
-          <div class="grid grid-cols-2 gap-2">
-            <p><strong>Von:</strong> {{ bookingDetails?.from }}</p>
-            <p><strong>Nach:</strong> {{ bookingDetails?.to }}</p>
-            <p><strong>Datum:</strong> {{ bookingDetails?.date }}</p>
+          <div class="space-y-3">
+            <!-- Outbound Flight -->
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-arrow-right" class="h-4 w-4 text-gray-500" />
+                <span class="text-gray-600">Hinflug: {{ bookingDetails?.from }} → {{ bookingDetails?.to }}</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-gray-600">{{ bookingDetails?.date }}</span>
+                <span class="text-blue-600 font-semibold">{{ formatAmount(calculateFlightPrice(bookingDetails?.prices))
+                }}€</span>
+              </div>
+            </div>
+            <!-- Return Flight -->
+            <div v-if="bookingDetails?.returnFrom" class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-arrow-left" class="h-4 w-4 text-gray-500" />
+                <span class="text-gray-600">Rückflug: {{ bookingDetails?.returnFrom }} → {{ bookingDetails?.returnTo
+                }}</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-gray-600">{{ bookingDetails?.returnDate }}</span>
+                <span class="text-blue-600 font-semibold">{{
+                  formatAmount(calculateFlightPrice(bookingDetails?.returnPrices)) }}€</span>
+              </div>
+            </div>
+
+            <!-- Subtotal -->
+            <div v-if="bookingDetails?.returnFrom"
+              class="flex justify-between items-center pt-2 border-t border-gray-100">
+              <span class="text-gray-600">Zwischensumme</span>
+              <span class="text-gray-800 font-semibold">{{ formatAmount(calculateFlightPrice(bookingDetails?.prices) +
+                calculateFlightPrice(bookingDetails?.returnPrices)) }}€</span>
+            </div>
           </div>
         </div>
 
@@ -42,18 +72,33 @@
             <h4 class="font-semibold text-gray-800">Passagiere</h4>
           </div>
           <div class="space-y-2">
-            <p v-if="bookingDetails?.passengers?.adults" class="flex justify-between">
-              <span>Erwachsene ({{ bookingDetails.passengers.adults }})</span>
-              <span>{{ formatAmount(bookingDetails.prices.adult * bookingDetails.passengers.adults) }}€</span>
-            </p>
-            <p v-if="bookingDetails?.passengers?.children" class="flex justify-between">
-              <span>Kinder ({{ bookingDetails.passengers.children }})</span>
-              <span>{{ formatAmount(bookingDetails.prices.child * bookingDetails.passengers.children) }}€</span>
-            </p>
-            <p v-if="bookingDetails?.passengers?.infants" class="flex justify-between">
-              <span>Babys ({{ bookingDetails.passengers.infants }})</span>
-              <span>{{ formatAmount(bookingDetails.prices.infant * bookingDetails.passengers.infants) }}€</span>
-            </p>
+            <div v-if="bookingDetails?.passengers?.adults" class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-user" class="h-4 w-4 text-gray-500" />
+                <span class="text-gray-600">Erwachsene ({{ bookingDetails.passengers.adults }})</span>
+              </div>
+              <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.adult *
+                bookingDetails.passengers.adults)
+                }}€</span>
+            </div>
+            <div v-if="bookingDetails?.passengers?.children" class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-user-group" class="h-4 w-4 text-gray-500" />
+                <span class="text-gray-600">Kinder ({{ bookingDetails.passengers.children }})</span>
+              </div>
+              <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.child *
+                bookingDetails.passengers.children)
+                }}€</span>
+            </div>
+            <div v-if="bookingDetails?.passengers?.infants" class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-user-circle" class="h-4 w-4 text-gray-500" />
+                <span class="text-gray-600">Babys ({{ bookingDetails.passengers.infants }})</span>
+              </div>
+              <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.infant *
+                bookingDetails.passengers.infants)
+                }}€</span>
+            </div>
           </div>
         </div>
 
@@ -92,10 +137,19 @@ import { useRouter } from 'vue-router';
 
 interface BookingDetails {
   flightNumber: string;
+  returnFlightNumber?: string;
   from: string;
   to: string;
   date: string;
+  returnFrom?: string;
+  returnTo?: string;
+  returnDate?: string;
   prices: {
+    adult: number;
+    child: number;
+    infant: number;
+  };
+  returnPrices?: {
     adult: number;
     child: number;
     infant: number;
@@ -140,9 +194,32 @@ const formatAmount = (amount: number) => {
   return amount.toFixed(2);
 };
 
+const calculateFlightPrice = (prices: { adult: number; child: number; infant: number } | undefined) => {
+  if (!prices || !props.bookingDetails?.passengers) return 0;
+
+  const { adults = 0, children = 0, infants = 0 } = props.bookingDetails.passengers;
+
+  const adultTotal = Number(prices.adult) * Number(adults);
+  const childTotal = Number(prices.child) * Number(children);
+  const infantTotal = Number(prices.infant) * Number(infants);
+
+  return Number((adultTotal + childTotal + infantTotal).toFixed(2));
+};
+
 const createPaymentLink = async () => {
   if (!props.amount || props.amount <= 0) {
     errorMessage.value = 'Ungültiger Betrag';
+    return;
+  }
+
+  // Calculate total price
+  const outboundTotal = calculateFlightPrice(props.bookingDetails?.prices);
+  const returnTotal = calculateFlightPrice(props.bookingDetails?.returnPrices);
+  const calculatedTotal = Number((outboundTotal + returnTotal).toFixed(2));
+
+  // Verify that the total matches the provided amount
+  if (Math.abs(calculatedTotal - props.amount) > 0.01) {
+    errorMessage.value = `Ungültiger Gesamtpreis. Erwartet: ${calculatedTotal}€, Bereitgestellt: ${props.amount}€`;
     return;
   }
 
@@ -167,19 +244,29 @@ const createPaymentLink = async () => {
     ].filter(Boolean).join(', ');
 
     const requestData = {
-      amount: props.amount,
+      amount: calculatedTotal,
       currency: props.currency || 'eur',
-      description: `Flug ${props.bookingDetails?.from} → ${props.bookingDetails?.to} am ${props.bookingDetails?.date} für ${passengerDescription}`,
+      description: `Flug ${props.bookingDetails?.from} → ${props.bookingDetails?.to}${props.bookingDetails?.returnFrom ? ` und ${props.bookingDetails.returnFrom} → ${props.bookingDetails.returnTo}` : ''} für ${passengerDescription}`,
       metadata: {
+        flightId: props.bookingDetails?.flightNumber,
+        returnFlightId: props.bookingDetails?.returnFlightNumber,
         from: props.bookingDetails?.from,
         to: props.bookingDetails?.to,
         date: props.bookingDetails?.date,
+        returnFrom: props.bookingDetails?.returnFrom,
+        returnTo: props.bookingDetails?.returnTo,
+        returnDate: props.bookingDetails?.returnDate,
         passengers_adults: String(props.bookingDetails?.passengers?.adults || 0),
         passengers_children: String(props.bookingDetails?.passengers?.children || 0),
         passengers_infants: String(props.bookingDetails?.passengers?.infants || 0),
         price_adult: String(props.bookingDetails?.prices?.adult || 0),
         price_child: String(props.bookingDetails?.prices?.child || 0),
-        price_infant: String(props.bookingDetails?.prices?.infant || 0)
+        price_infant: String(props.bookingDetails?.prices?.infant || 0),
+        return_price_adult: String(props.bookingDetails?.returnPrices?.adult || 0),
+        return_price_child: String(props.bookingDetails?.returnPrices?.child || 0),
+        return_price_infant: String(props.bookingDetails?.returnPrices?.infant || 0),
+        total_outbound: String(outboundTotal),
+        total_return: String(returnTotal)
       },
       contactPerson: {
         firstName: props.contactPerson.firstName,
@@ -214,6 +301,9 @@ const createPaymentLink = async () => {
             from: props.bookingDetails?.from,
             to: props.bookingDetails?.to,
             date: props.bookingDetails?.date,
+            returnFrom: props.bookingDetails?.returnFrom,
+            returnTo: props.bookingDetails?.returnTo,
+            returnDate: props.bookingDetails?.returnDate,
             adults: props.bookingDetails?.passengers?.adults,
             children: props.bookingDetails?.passengers?.children,
             infants: props.bookingDetails?.passengers?.infants
