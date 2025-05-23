@@ -83,7 +83,7 @@
                                                 <div class="flex items-center">
                                                     <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
                                                     <div class="text-lg font-bold">{{ calculateTotalPrice(flight)
-                                                        }}€
+                                                    }}€
                                                     </div>
                                                 </div>
                                             </div>
@@ -137,7 +137,7 @@
                                                 </div>
                                                 <div class="text-base font-semibold text-gray-700">{{
                                                     segment.duration
-                                                    }}
+                                                }}
                                                 </div>
                                             </div>
 
@@ -166,7 +166,7 @@
                                                     <div class="text-base font-semibold text-gray-800">{{
                                                         formatSegmentTime(segment.arrival) }}</div>
                                                     <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name
-                                                        }}
+                                                    }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -241,7 +241,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Navigation Buttons - Moved outside the flight card loop -->
                     <div v-if="!isLoading && activeStep < 2" class="mt-6 flex justify-between">
                         <!-- go back Button -->
