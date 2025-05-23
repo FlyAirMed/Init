@@ -243,7 +243,7 @@
                     </div>
 
                     <!-- Navigation Buttons - Moved outside the flight card loop -->
-                    <div v-if="!isLoading && activeStep < 0" class="mt-6 flex justify-between">
+                    <div v-if="!isLoading && activeStep < 2" class="mt-6 flex justify-between">
                         <!-- go back Button -->
                         <UButton size="lg" class="px-8" @click="navigateTo('/')">
                             <template #icon>
