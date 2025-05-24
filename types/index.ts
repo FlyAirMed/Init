@@ -25,7 +25,7 @@ export interface FlightSegment {
   to: string;
   departure: string; // ISO date string
   arrival: string; // ISO date string
-  duration: string; // formatted like "2h 30min"
+  duration: string; // User input duration like "2h 30min"
   flightNumber: string;
   baggageAllowance: BaggageAllowance;
 }

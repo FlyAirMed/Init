@@ -54,7 +54,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                            }}</p>
+                                                        }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -77,7 +77,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                            }}</p>
+                                                        }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -90,37 +90,72 @@
                                     class="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
                                     <div class="flex items-center gap-2 mb-4">
                                         <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 text-yellow-600" />
-                                        <h5 class="font-medium text-yellow-900">Zwischenstopp in Athen (ATH)</h5>
+                                        <h5 class="font-medium text-yellow-900">Athen</h5>
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <!-- ATH Arrival -->
                                         <div class="bg-white p-4 rounded-lg">
-                                            <UFormGroup label="Ankunft in ATH" class="text-base"
-                                                help="Ankunftszeit in Athen"
+                                            <div class="mb-2">
+                                                <span class="text-sm font-medium text-gray-700">Ankunft von {{
+                                                    form.origin.label }}</span>
+                                            </div>
+                                            <UFormGroup
                                                 :state="formValidation.intermediateStop.arrival.valid ? undefined : false"
                                                 :error="formValidation.intermediateStop.arrival.message">
-                                                <UInput v-model="form.intermediateStop.arrival" type="time"
-                                                    class="h-12 text-base" size="lg" icon="i-heroicons-clock" />
+                                                <UInput v-model="form.intermediateStop.arrival" type="text"
+                                                    class="h-12 text-base" size="lg" placeholder="z.B. 15:45 Uhr" />
                                             </UFormGroup>
                                         </div>
 
                                         <!-- ATH Departure -->
                                         <div class="bg-white p-4 rounded-lg">
-                                            <UFormGroup label="Abflug von ATH" class="text-base"
-                                                help="Abflugzeit von Athen"
+                                            <div class="mb-2">
+                                                <span class="text-sm font-medium text-gray-700">Abflug nach {{
+                                                    form.destination.label }}</span>
+                                            </div>
+                                            <UFormGroup
                                                 :state="formValidation.intermediateStop.departure.valid ? undefined : false"
                                                 :error="formValidation.intermediateStop.departure.message">
-                                                <UInput v-model="form.intermediateStop.departure" type="time"
-                                                    class="h-12 text-base" size="lg" icon="i-heroicons-clock" />
+                                                <UInput v-model="form.intermediateStop.departure" type="text"
+                                                    class="h-12 text-base" size="lg" placeholder="z.B. 16:30 Uhr" />
                                             </UFormGroup>
                                         </div>
                                     </div>
 
-                                    <!-- Flight Number for Intermediate Stop -->
+                                    <!-- Flight Number for First Segment (origin -> ATH) -->
                                     <div class="mt-4 bg-white p-4 rounded-lg">
-                                        <UFormGroup label="Flugnummer für Zwischenstopp" class="text-base"
-                                            help="Flugnummer für den Flug nach/von Athen"
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Flugnummer für {{
+                                                form.origin.label }} - ATH</span>
+                                        </div>
+                                        <UFormGroup :state="formValidation.flightNumber.valid ? undefined : false"
+                                            :error="formValidation.flightNumber.message">
+                                            <UInput v-model="form.flightNumber" type="text" class="h-12 text-base"
+                                                size="lg" placeholder="z.B. ATA123" />
+                                        </UFormGroup>
+                                    </div>
+
+                                    <!-- Duration for First Segment (origin -> ATH) -->
+                                    <div class="mt-4 bg-white p-4 rounded-lg">
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Dauer von {{
+                                                form.origin.label }} nach ATH</span>
+                                        </div>
+                                        <UFormGroup :state="formValidation.duration.valid ? undefined : false"
+                                            :error="formValidation.duration.message">
+                                            <UInput v-model="form.duration" type="text" class="h-12 text-base" size="lg"
+                                                placeholder="z.B. 2 Stunden 30 Minuten" />
+                                        </UFormGroup>
+                                    </div>
+
+                                    <!-- Flight Number for Second Segment (ATH -> destination) -->
+                                    <div class="mt-4 bg-white p-4 rounded-lg">
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Flugnummer für ATH - {{
+                                                form.destination.label }}</span>
+                                        </div>
+                                        <UFormGroup
                                             :state="formValidation.intermediateStop.flightNumber.valid ? undefined : false"
                                             :error="formValidation.intermediateStop.flightNumber.message">
                                             <UInput v-model="form.intermediateStop.flightNumber" type="text"
@@ -128,20 +163,19 @@
                                         </UFormGroup>
                                     </div>
 
-                                    <!-- Waiting Time Display -->
-                                    <div class="mt-4 p-3 bg-white rounded-lg flex items-center gap-3">
-                                        <div class="bg-yellow-100 p-2 rounded-md">
-                                            <UIcon name="i-heroicons-clock" class="h-5 w-5 text-yellow-600" />
+                                    <!-- Duration for Second Segment (ATH -> destination) -->
+                                    <div class="mt-4 bg-white p-4 rounded-lg">
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Dauer von ATH nach {{
+                                                form.destination.label }}</span>
                                         </div>
-                                        <div>
-                                            <p class="text-sm text-gray-600">Wartezeit in Athen</p>
-                                            <p class="text-base font-medium text-gray-800">
-                                                {{ form.intermediateStop.arrival && form.intermediateStop.departure ?
-                                                    calculateDuration(form.intermediateStop.arrival,
-                                                        form.intermediateStop.departure) :
-                                                    '-- : --' }}
-                                            </p>
-                                        </div>
+                                        <UFormGroup
+                                            :state="formValidation.intermediateStop.duration.valid ? undefined : false"
+                                            :error="formValidation.intermediateStop.duration.message">
+                                            <UInput v-model="form.intermediateStop.duration" type="text"
+                                                class="h-12 text-base" size="lg"
+                                                placeholder="z.B. 1 Stunde 45 Minuten" />
+                                        </UFormGroup>
                                     </div>
                                 </div>
                             </div>
@@ -173,11 +207,15 @@
                                             <UIcon name="i-heroicons-arrow-up-circle" class="h-5 w-5 text-blue-600" />
                                             <h5 class="font-medium text-blue-900">Abflug</h5>
                                         </div>
-                                        <UFormGroup label="Abflugzeit" class="text-base" help="Lokale Startzeit"
-                                            :state="formValidation.departureTime.valid ? undefined : false"
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Abflug von {{
+                                                form.origin.label }}</span>
+                                        </div>
+                                        <UFormGroup :state="formValidation.departureTime.valid ? undefined : false"
                                             :error="formValidation.departureTime.message">
-                                            <UInput v-model="form.departureTime" type="time"
-                                                class="h-12 text-base bg-white" size="lg" icon="i-heroicons-clock" />
+                                            <UInput v-model="form.departureTime" type="text"
+                                                class="h-12 text-base bg-white" size="lg"
+                                                placeholder="z.B. 14:30 Uhr" />
                                         </UFormGroup>
                                     </div>
 
@@ -188,28 +226,32 @@
                                                 class="h-5 w-5 text-green-600" />
                                             <h5 class="font-medium text-green-900">Ankunft</h5>
                                         </div>
-                                        <UFormGroup label="Ankunftszeit" class="text-base" help="Lokale Ankunftszeit"
-                                            :state="formValidation.arrivalTime.valid ? undefined : false"
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Ankunft in {{
+                                                form.destination.label }}</span>
+                                        </div>
+                                        <UFormGroup :state="formValidation.arrivalTime.valid ? undefined : false"
                                             :error="formValidation.arrivalTime.message">
-                                            <UInput v-model="form.arrivalTime" type="time"
-                                                class="h-12 text-base bg-white" size="lg" icon="i-heroicons-clock" />
+                                            <UInput v-model="form.arrivalTime" type="text"
+                                                class="h-12 text-base bg-white" size="lg"
+                                                placeholder="z.B. 16:45 Uhr" />
                                         </UFormGroup>
                                     </div>
                                 </div>
 
-                                <!-- Duration Display -->
-                                <div class="mt-4 p-3 bg-gray-50 rounded-lg flex items-center gap-3">
-                                    <div class="bg-white p-2 rounded-md">
-                                        <UIcon name="i-heroicons-clock" class="h-5 w-5 text-gray-600" />
+                                <!-- Duration Input (nur bei Direktflug) -->
+                                <div v-if="!showIntermediateStop"
+                                    class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div class="mb-2">
+                                        <span class="text-sm font-medium text-gray-700">Dauer von {{ form.origin.label
+                                            }} nach {{
+                                            form.destination.label }}</span>
                                     </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600">Flugdauer</p>
-                                        <p class="text-base font-medium text-gray-800">
-                                            {{ form.departureTime && form.arrivalTime ?
-                                                calculateDuration(form.departureTime, form.arrivalTime) :
-                                                '-- : --' }}
-                                        </p>
-                                    </div>
+                                    <UFormGroup :state="formValidation.duration.valid ? undefined : false"
+                                        :error="formValidation.duration.message">
+                                        <UInput v-model="form.duration" type="text" class="h-12 text-base" size="lg"
+                                            placeholder="z.B. 2 Stunden 30 Minuten" />
+                                    </UFormGroup>
                                 </div>
                             </div>
 
@@ -464,7 +506,8 @@ const initialFormState = {
     intermediateStop: {
         arrival: '',
         departure: '',
-        flightNumber: ''
+        flightNumber: '',
+        duration: ''
     },
     flightNumber: '',
     baggageAllowance: {
@@ -482,27 +525,6 @@ const airportOptions = computed(() => {
         value: code
     }));
 });
-
-const statusOptions = [
-    {
-        label: 'Aktiv',
-        value: FlightStatus.ACTIVE,
-        icon: 'i-heroicons-check-circle',
-        description: 'Flug ist buchbar'
-    },
-    {
-        label: 'Storniert',
-        value: FlightStatus.CANCELLED,
-        icon: 'i-heroicons-x-circle',
-        description: 'Flug wurde abgesagt'
-    },
-    {
-        label: 'Abgeschlossen',
-        value: FlightStatus.COMPLETED,
-        icon: 'i-heroicons-archive-box',
-        description: 'Flug wurde durchgeführt'
-    }
-];
 
 // Add new validation functions
 const validateDate = (date) => {
@@ -555,40 +577,28 @@ const formValidation = computed(() => ({
     },
     departureTime: {
         valid: !!form.departureTime,
-        message: !form.departureTime ? 'Bitte wählen Sie eine Abflugzeit' : ''
+        message: !form.departureTime ? 'Bitte geben Sie die Abflugzeit ein' : ''
     },
     arrivalTime: {
-        valid: !!form.arrivalTime && validateTimeSequence(form.departureTime, form.arrivalTime),
-        message: !form.arrivalTime
-            ? 'Bitte wählen Sie eine Ankunftszeit'
-            : !validateTimeSequence(form.departureTime, form.arrivalTime)
-                ? 'Die Ankunftszeit muss nach der Abflugzeit liegen'
-                : ''
+        valid: !!form.arrivalTime,
+        message: !form.arrivalTime ? 'Bitte geben Sie die Ankunftszeit ein' : ''
     },
     intermediateStop: {
         arrival: {
-            valid: !showIntermediateStop.value || (!!form.intermediateStop.arrival && validateTimeSequence(form.departureTime, form.intermediateStop.arrival)),
-            message: !form.intermediateStop.arrival
-                ? 'Bitte geben Sie die Ankunftszeit in Athen ein'
-                : !validateTimeSequence(form.departureTime, form.intermediateStop.arrival)
-                    ? 'Die Ankunftszeit in Athen muss nach der Abflugzeit liegen'
-                    : ''
+            valid: !showIntermediateStop.value || !!form.intermediateStop.arrival,
+            message: !form.intermediateStop.arrival ? 'Bitte geben Sie die Ankunftszeit in Athen ein' : ''
         },
         departure: {
-            valid: !showIntermediateStop.value || (!!form.intermediateStop.departure &&
-                validateTimeSequence(form.intermediateStop.arrival, form.intermediateStop.departure) &&
-                validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)),
-            message: !form.intermediateStop.departure
-                ? 'Bitte geben Sie die Abflugzeit von Athen ein'
-                : !validateTimeSequence(form.intermediateStop.arrival, form.intermediateStop.departure)
-                    ? 'Die Abflugzeit von Athen muss nach der Ankunftszeit liegen'
-                    : !validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)
-                        ? 'Die Ruhezeit in Athen muss mindestens 30 Minuten betragen'
-                        : ''
+            valid: !showIntermediateStop.value || !!form.intermediateStop.departure,
+            message: !form.intermediateStop.departure ? 'Bitte geben Sie die Abflugzeit von Athen ein' : ''
         },
         flightNumber: {
             valid: !showIntermediateStop.value || !!form.intermediateStop.flightNumber,
             message: !form.intermediateStop.flightNumber ? 'Bitte geben Sie eine Flugnummer für den Zwischenstopp ein' : ''
+        },
+        duration: {
+            valid: !showIntermediateStop.value || !!form.intermediateStop.duration,
+            message: !form.intermediateStop.duration ? 'Bitte geben Sie die Flugdauer für den Zwischenstopp ein' : ''
         }
     },
     prices: {
@@ -618,7 +628,11 @@ const formValidation = computed(() => ({
     flightNumber: {
         valid: !!form.flightNumber,
         message: !form.flightNumber ? 'Bitte geben Sie eine Flugnummer für den Hauptflug ein' : ''
-    }
+    },
+    duration: {
+        valid: !!form.duration,
+        message: !form.duration ? 'Bitte geben Sie die Flugdauer ein' : ''
+    },
 }));
 
 // Add computed property for showing intermediate stop
@@ -639,7 +653,8 @@ const resetForm = () => {
     form.intermediateStop = {
         arrival: '',
         departure: '',
-        flightNumber: ''
+        flightNumber: '',
+        duration: ''
     };
     delete form.id;
     errorMessage.value = '';
@@ -674,7 +689,8 @@ watch(() => props.flight, (newFlight) => {
                 form.intermediateStop = {
                     arrival: '',
                     departure: '',
-                    flightNumber: ''
+                    flightNumber: '',
+                    duration: ''
                 };
             }
         }
@@ -693,20 +709,6 @@ watch(() => props.flight, (newFlight) => {
         resetForm();
     }
 }, { immediate: true });
-
-// Compute flight duration
-const calculateDuration = (departureTime, arrivalTime) => {
-    debugger;
-    const [depHours, depMinutes] = departureTime.split(':').map(Number);
-    const [arrHours, arrMinutes] = arrivalTime.split(':').map(Number);
-
-    let durationMinutes = (arrHours * 60 + arrMinutes) - (depHours * 60 + depMinutes);
-    if (durationMinutes < 0) durationMinutes += 24 * 60; // Handle next day arrival
-
-    const hours = Math.floor(durationMinutes / 60);
-    const minutes = durationMinutes % 60;
-    return `${hours}h ${minutes}min`;
-};
 
 // Methods
 const saveFlight = async () => {
@@ -742,91 +744,61 @@ const saveFlight = async () => {
         if (showIntermediateStop.value) {
             if (destination === 'DAM') {
                 // First segment: Origin to ATH
-                const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
-                const arrTime = new Date(`${dateStr}T${form.intermediateStop.arrival}:00.000Z`);
                 segments.push({
                     from: origin,
                     to: 'ATH',
-                    departure: depTime.toISOString(),
-                    arrival: arrTime.toISOString(),
-                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival),
+                    departure: `${dateStr} ${form.departureTime}`,
+                    arrival: `${dateStr} ${form.intermediateStop.arrival}`,
+                    duration: form.duration,
                     flightNumber: form.flightNumber,
                     baggageAllowance: form.baggageAllowance
                 });
 
                 // Second segment: ATH to DAM
-                const athDepTime = new Date(`${dateStr}T${form.intermediateStop.departure}:00.000Z`);
-                // If arrival time is before departure time, it's the next day
-                let damArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-                if (damArrTime < athDepTime) {
-                    damArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-                    damArrTime.setDate(damArrTime.getDate() + 1);
-                }
                 segments.push({
                     from: 'ATH',
                     to: destination,
-                    departure: athDepTime.toISOString(),
-                    arrival: damArrTime.toISOString(),
-                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime),
+                    departure: `${dateStr} ${form.intermediateStop.departure}`,
+                    arrival: `${dateStr} ${form.arrivalTime}`,
+                    duration: form.intermediateStop.duration,
                     flightNumber: form.intermediateStop.flightNumber,
                     baggageAllowance: form.baggageAllowance
                 });
             } else {
                 // First segment: DAM to ATH
-                const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
-                const arrTime = new Date(`${dateStr}T${form.intermediateStop.arrival}:00.000Z`);
                 segments.push({
                     from: origin,
                     to: 'ATH',
-                    departure: depTime.toISOString(),
-                    arrival: arrTime.toISOString(),
-                    duration: calculateDuration(form.departureTime, form.intermediateStop.arrival),
+                    departure: `${dateStr} ${form.departureTime}`,
+                    arrival: `${dateStr} ${form.intermediateStop.arrival}`,
+                    duration: form.duration,
                     flightNumber: form.flightNumber,
                     baggageAllowance: form.baggageAllowance
                 });
 
                 // Second segment: ATH to Destination
-                const athDepTime = new Date(`${dateStr}T${form.intermediateStop.departure}:00.000Z`);
-                let finalArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-                if (finalArrTime < athDepTime) {
-                    finalArrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-                    finalArrTime.setDate(finalArrTime.getDate() + 1);
-                }
                 segments.push({
                     from: 'ATH',
                     to: destination,
-                    departure: athDepTime.toISOString(),
-                    arrival: finalArrTime.toISOString(),
-                    duration: calculateDuration(form.intermediateStop.departure, form.arrivalTime),
+                    departure: `${dateStr} ${form.intermediateStop.departure}`,
+                    arrival: `${dateStr} ${form.arrivalTime}`,
+                    duration: form.intermediateStop.duration,
                     flightNumber: form.intermediateStop.flightNumber,
                     baggageAllowance: form.baggageAllowance
                 });
             }
         } else {
             // Direct flight
-            const depTime = new Date(`${dateStr}T${form.departureTime}:00.000Z`);
-            let arrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-            if (arrTime < depTime) {
-                arrTime = new Date(`${dateStr}T${form.arrivalTime}:00.000Z`);
-                arrTime.setDate(arrTime.getDate() + 1);
-            }
             segments.push({
                 from: origin,
                 to: destination,
-                departure: depTime.toISOString(),
-                arrival: arrTime.toISOString(),
-                duration: calculateDuration(form.departureTime, form.arrivalTime),
+                departure: `${dateStr} ${form.departureTime}`,
+                arrival: `${dateStr} ${form.arrivalTime}`,
+                duration: form.duration,
                 flightNumber: form.flightNumber,
                 baggageAllowance: form.baggageAllowance
             });
         }
-
-        // Calculate total duration
-        const totalDuration = segments.reduce((total, segment) => {
-            const dep = new Date(segment.departure);
-            const arr = new Date(segment.arrival);
-            return total + (arr - dep);
-        }, 0);
 
         const flightData = {
             id: form.id,
@@ -835,7 +807,7 @@ const saveFlight = async () => {
             date: dateStr,
             departureTime: form.departureTime,
             arrivalTime: form.arrivalTime,
-            duration: formatDuration(totalDuration),
+            duration: form.duration,
             availableSeats: Number(form.availableSeats),
             prices: {
                 [PassengerType.ADULT]: Number(form.prices[PassengerType.ADULT]),
@@ -843,13 +815,7 @@ const saveFlight = async () => {
                 [PassengerType.INFANT]: Number(form.prices[PassengerType.INFANT]),
             },
             status: form.status || FlightStatus.ACTIVE,
-            segments: segments.map(segment => ({
-                ...segment,
-                duration: calculateDuration(
-                    new Date(segment.departure).toTimeString().slice(0, 5),
-                    new Date(segment.arrival).toTimeString().slice(0, 5)
-                )
-            })),
+            segments: segments,
             baggageAllowance: form.baggageAllowance
         };
 
@@ -878,13 +844,6 @@ const saveFlight = async () => {
     } finally {
         isLoading.value = false;
     }
-};
-
-// Add helper function to format duration
-const formatDuration = (milliseconds) => {
-    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}min`;
 };
 
 const closeModal = () => {

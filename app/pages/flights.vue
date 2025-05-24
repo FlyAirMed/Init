@@ -84,7 +84,7 @@
                                                     <div class="flex items-center">
                                                         <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
                                                         <div class="text-lg font-bold">{{ calculateTotalPrice(flight)
-                                                        }}€</div>
+                                                            }}€</div>
                                                     </div>
                                                     <div class="text-xs text-white/90 mt-1 flex items-center gap-1">
                                                         <UIcon name="i-heroicons-information-circle" class="h-4 w-4" />
@@ -132,14 +132,12 @@
                                                                 {{ AIRPORTS[segment.from].name }} → {{
                                                                     AIRPORTS[segment.to].name }}
                                                             </div>
-                                                            <div class="text-sm text-gray-600">
-                                                                {{ formatSegmentTime(segment.departure) }} - {{
-                                                                    formatSegmentTime(segment.arrival) }}
-                                                            </div>
+                                                            <div class="text-sm text-gray-600">{{ segment.departure }} -
+                                                                {{ segment.arrival }}</div>
                                                         </div>
                                                     </div>
                                                     <div class="text-base font-semibold text-gray-700">{{
-                                                        calculateDuration(segment.departure, segment.arrival) }}</div>
+                                                        segment.duration }}</div>
                                                 </div>
 
                                                 <!-- Segment Details -->
@@ -152,7 +150,7 @@
                                                             <div class="text-sm text-gray-600">Abflug</div>
                                                         </div>
                                                         <div class="text-base font-semibold text-gray-800">{{
-                                                            formatSegmentTime(segment.departure) }}</div>
+                                                            segment.departure }}</div>
                                                         <div class="text-sm text-gray-600">{{
                                                             AIRPORTS[segment.from].name }}</div>
                                                     </div>
@@ -164,9 +162,9 @@
                                                             <div class="text-sm text-gray-600">Ankunft</div>
                                                         </div>
                                                         <div class="text-base font-semibold text-gray-800">{{
-                                                            formatSegmentTime(segment.arrival) }}</div>
+                                                            segment.arrival }}</div>
                                                         <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name
-                                                            }}</div>
+                                                        }}</div>
                                                     </div>
                                                 </div>
                                             </div>
