@@ -254,7 +254,7 @@ const areAllFieldsFilled = computed(() => {
 const initializeAdditionalPassengers = () => {
     additionalPassengers.value = [];
 
-// Add adults
+    // Add adults
     for (let i = 0; i < props.totalAdults - 1; i++) {
         additionalPassengers.value.push({
             firstName: '',
@@ -342,7 +342,7 @@ watch([contactPerson, additionalPassengers], () => {
                         class="mt-2">
                         <h4 class="font-medium text-red-700 mb-1">
                             {{ passenger.type === 'adult' ? 'Erwachsener' : passenger.type === 'child' ? 'Kind' :
-                            'Säugling' }} {{ index + 1 }}:
+                                'Säugling' }} {{ index + 1 }}:
                         </h4>
                         <ul class="list-disc list-inside text-red-600 space-y-1">
                             <li v-if="!passenger.firstName && passenger.firstName">Vorname ist ungültig</li>
@@ -358,7 +358,7 @@ watch([contactPerson, additionalPassengers], () => {
 
         <!-- Contact Person Section -->
         <div class="bg-white rounded-lg shadow p-8">
-            <h2 class="text-2xl font-semibold mb-8">Kontaktperson</h2>
+            <h2 class="text-2xl font-semibold mb-8">Passagiere</h2>
 
             <div class="flex flex-wrap gap-6">
                 <div class="w-full md:w-[calc(50%-12px)]">
@@ -384,7 +384,7 @@ watch([contactPerson, additionalPassengers], () => {
                                 :state="formValidation.contactPerson.birthDate ? undefined : false"
                                 class="w-full justify-start">
                                 {{ contactPerson.birthDate ?
-                                df.format(contactPerson.birthDate.toDate(getLocalTimeZone())) : 'Geburtsdatum auswählen'
+                                    df.format(contactPerson.birthDate.toDate(getLocalTimeZone())) : 'Geburtsdatum auswählen'
                                 }}
                             </UButton>
 
@@ -469,7 +469,7 @@ watch([contactPerson, additionalPassengers], () => {
                     <h3 class="text-xl font-medium">
                         {{ passenger.type === 'adult' ? 'Erwachsener' : passenger.type === 'child' ? 'Kind' : 'Säugling'
                         }} {{
-                        index + 1 }}
+                            index + 1 }}
                     </h3>
                 </div>
 
@@ -497,7 +497,7 @@ watch([contactPerson, additionalPassengers], () => {
                                     :state="passenger.birthDate ? validateBirthDate(passenger.birthDate, passenger.type) ? undefined : false : false"
                                     class="w-full justify-start">
                                     {{ passenger.birthDate ? df.format(passenger.birthDate.toDate(getLocalTimeZone())) :
-                                    'Geburtsdatum auswählen' }}
+                                        'Geburtsdatum auswählen' }}
                                 </UButton>
 
                                 <template #content>

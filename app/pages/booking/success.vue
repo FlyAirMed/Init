@@ -76,7 +76,7 @@
                             </li>
                             <li class="flex items-start gap-2">
                                 <UIcon name="i-heroicons-clock" class="h-5 w-5 text-blue-500 mt-0.5" />
-                                <span>Seien Sie mindestens 2 Stunden vor Abflug am Flughafen</span>
+                                <span>Seien Sie mindestens 3 Stunden vor Abflug am Flughafen</span>
                             </li>
                         </ul>
                     </div>
