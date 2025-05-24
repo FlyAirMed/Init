@@ -371,7 +371,7 @@
                                         <div class="relative">
                                             <UInput v-model="form.prices.infant" type="number" min="0" step="0.01"
                                                 class="h-12 text-base pl-12" size="lg" />
-                                            Roundtrip
+                                                One-Way
                                             <div
                                                 class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                                 <span class="text-gray-500">€</span>
@@ -385,7 +385,7 @@
                                         <div class="relative">
                                             <UInput v-model="form.prices.roundTripInfant" type="number" min="0"
                                                 step="0.01" class="h-12 text-base pl-12" size="lg" />
-                                            One-Way
+                                            Roundtrip
                                             <div
                                                 class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                                 <span class="text-gray-500">€</span>
