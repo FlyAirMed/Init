@@ -85,6 +85,45 @@
                                     </UFormGroup>
                                 </div>
 
+                                <!-- Time Selection Cards -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                                    <!-- Departure Time Card -->
+                                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <UIcon name="i-heroicons-arrow-up-circle" class="h-5 w-5 text-blue-600" />
+                                            <h5 class="font-medium text-blue-900">Abflug</h5>
+                                        </div>
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Abflug von {{
+                                                form.origin.label }}</span>
+                                        </div>
+                                        <UFormGroup :state="formValidation.departureTime.valid ? undefined : false"
+                                            :error="formValidation.departureTime.message">
+                                            <UInput v-model="form.departureTime" type="text"
+                                                class="h-12 text-base bg-white" size="lg"
+                                                placeholder="z.B. 14:30 Uhr" />
+                                        </UFormGroup>
+                                    </div>
+
+                                    <!-- Arrival Time Card -->
+                                    <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <UIcon name="i-heroicons-arrow-down-circle"
+                                                class="h-5 w-5 text-green-600" />
+                                            <h5 class="font-medium text-green-900">Ankunft</h5>
+                                        </div>
+                                        <div class="mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Ankunft in {{
+                                                form.destination.label }}</span>
+                                        </div>
+                                        <UFormGroup :state="formValidation.arrivalTime.valid ? undefined : false"
+                                            :error="formValidation.arrivalTime.message">
+                                            <UInput v-model="form.arrivalTime" type="text"
+                                                class="h-12 text-base bg-white" size="lg"
+                                                placeholder="z.B. 16:45 Uhr" />
+                                        </UFormGroup>
+                                    </div>
+                                </div>
                                 <!-- Intermediate Stop Section -->
                                 <div v-if="showIntermediateStop"
                                     class="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
@@ -199,46 +238,6 @@
                                     </UFormGroup>
                                 </div>
 
-                                <!-- Time Selection Cards -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Departure Time Card -->
-                                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                        <div class="flex items-center gap-2 mb-3">
-                                            <UIcon name="i-heroicons-arrow-up-circle" class="h-5 w-5 text-blue-600" />
-                                            <h5 class="font-medium text-blue-900">Abflug</h5>
-                                        </div>
-                                        <div class="mb-2">
-                                            <span class="text-sm font-medium text-gray-700">Abflug von {{
-                                                form.origin.label }}</span>
-                                        </div>
-                                        <UFormGroup :state="formValidation.departureTime.valid ? undefined : false"
-                                            :error="formValidation.departureTime.message">
-                                            <UInput v-model="form.departureTime" type="text"
-                                                class="h-12 text-base bg-white" size="lg"
-                                                placeholder="z.B. 14:30 Uhr" />
-                                        </UFormGroup>
-                                    </div>
-
-                                    <!-- Arrival Time Card -->
-                                    <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                                        <div class="flex items-center gap-2 mb-3">
-                                            <UIcon name="i-heroicons-arrow-down-circle"
-                                                class="h-5 w-5 text-green-600" />
-                                            <h5 class="font-medium text-green-900">Ankunft</h5>
-                                        </div>
-                                        <div class="mb-2">
-                                            <span class="text-sm font-medium text-gray-700">Ankunft in {{
-                                                form.destination.label }}</span>
-                                        </div>
-                                        <UFormGroup :state="formValidation.arrivalTime.valid ? undefined : false"
-                                            :error="formValidation.arrivalTime.message">
-                                            <UInput v-model="form.arrivalTime" type="text"
-                                                class="h-12 text-base bg-white" size="lg"
-                                                placeholder="z.B. 16:45 Uhr" />
-                                        </UFormGroup>
-                                    </div>
-                                </div>
-
                                 <!-- Duration Input (nur bei Direktflug) -->
                                 <div v-if="!showIntermediateStop"
                                     class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
@@ -256,7 +255,7 @@
                             </div>
 
                             <!-- Flugnummern -->
-                            <div class="mb-6">
+                            <div class="mb-6" v-if="!showIntermediateStop">
                                 <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center gap-2">
                                     <UIcon name="i-heroicons-paper-airplane" class="h-5 w-5" />
                                     Flugnummern
