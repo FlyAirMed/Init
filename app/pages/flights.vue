@@ -78,13 +78,17 @@
                                             </div>
                                         </div>
                                         <div class="flex items-center flex-col gap-4">
-                                            <div
+                                            <div v-if="!selectedReturnFlight || flight.id === selectedFlight?.id"
                                                 class="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-md text-white shadow-lg">
                                                 <div class="flex flex-col">
                                                     <div class="flex items-center">
                                                         <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
                                                         <div class="text-lg font-bold">{{ calculateTotalPrice(flight)
-                                                            }}€</div>
+                                                        }}€</div>
+                                                    </div>
+                                                    <div class="text-xs text-white/90 mt-1 flex items-center gap-1">
+                                                        <UIcon name="i-heroicons-information-circle" class="h-4 w-4" />
+                                                        <span>Gesamtpreis {{ priceText }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -162,7 +166,7 @@
                                                         <div class="text-base font-semibold text-gray-800">{{
                                                             formatSegmentTime(segment.arrival) }}</div>
                                                         <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name
-                                                        }}</div>
+                                                            }}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -250,19 +254,20 @@
                             </div>
                             <h2 class="text-2xl font-semibold text-gray-800">Zahlungsinformationen</h2>
                         </div>
-                        <PaymentForm :amount="calculateTotalPrice(selectedFlight)" currency="eur" :booking-details="{
-                            flightNumber: selectedFlight?.id,
-                            returnFlightNumber: selectedReturnFlight?.id,
-                            from: AIRPORTS[selectedFlight?.origin]?.name,
-                            to: AIRPORTS[selectedFlight?.destination]?.name,
-                            date: formatDate(selectedFlight?.date),
-                            returnFrom: selectedReturnFlight ? AIRPORTS[selectedReturnFlight?.origin]?.name : undefined,
-                            returnTo: selectedReturnFlight ? AIRPORTS[selectedReturnFlight?.destination]?.name : undefined,
-                            returnDate: selectedReturnFlight ? formatDate(selectedReturnFlight?.date) : undefined,
-                            prices: selectedFlight?.prices,
-                            returnPrices: selectedReturnFlight?.prices,
-                            passengers: searchParams?.passengers
-                        }" :contact-person="passengerData?.contactPerson"
+                        <PaymentForm :amount="calculateTotalPrice(selectedFlight.value)" currency="eur"
+                            :booking-details="{
+                                flightNumber: selectedFlight?.id,
+                                returnFlightNumber: selectedReturnFlight?.id,
+                                from: AIRPORTS[selectedFlight?.origin]?.name,
+                                to: AIRPORTS[selectedFlight?.destination]?.name,
+                                date: formatDate(selectedFlight?.date),
+                                returnFrom: selectedReturnFlight ? AIRPORTS[selectedReturnFlight?.origin]?.name : undefined,
+                                returnTo: selectedReturnFlight ? AIRPORTS[selectedReturnFlight?.destination]?.name : undefined,
+                                returnDate: selectedReturnFlight ? formatDate(selectedReturnFlight?.date) : undefined,
+                                prices: selectedFlight?.prices,
+                                returnPrices: selectedReturnFlight?.prices,
+                                passengers: searchParams?.passengers
+                            }" :contact-person="passengerData?.contactPerson"
                             :additional-passengers="passengerData?.additionalPassengers" @success="handlePaymentSuccess"
                             @error="handlePaymentError" />
                     </div>
@@ -302,7 +307,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { AIRPORTS } from '../../types';
 import PassengerStep from '../components/PassengerStep.vue';
 import PaymentForm from '../components/PaymentForm.vue';
@@ -396,12 +401,17 @@ const formatSegmentTime = (dateString) => {
 const calculateDuration = (departureTime, arrivalTime) => {
     if (!departureTime || !arrivalTime) return '-- : --';
 
-    // Convert ISO strings to time strings first, just like in FlightEditModal
+    // Convert ISO strings to time strings first
     const depTimeStr = new Date(departureTime).toTimeString().slice(0, 5);
     const arrTimeStr = new Date(arrivalTime).toTimeString().slice(0, 5);
 
     const [depHours, depMinutes] = depTimeStr.split(':').map(Number);
     const [arrHours, arrMinutes] = arrTimeStr.split(':').map(Number);
+
+    // Validate that we have valid numbers
+    if (isNaN(depHours) || isNaN(depMinutes) || isNaN(arrHours) || isNaN(arrMinutes)) {
+        return '-- : --';
+    }
 
     let durationMinutes = (arrHours * 60 + arrMinutes) - (depHours * 60 + depMinutes);
     if (durationMinutes < 0) durationMinutes += 24 * 60; // Handle next day arrival
@@ -435,6 +445,10 @@ const calculateTotalPrice = (flight) => {
 
     return currentFlightPrice;
 };
+
+const priceText = computed(() => {
+    return selectedReturnFlight.value ? 'für Hin- und Rückflug' : 'für Hinflug';
+});
 
 onMounted(async () => {
     try {

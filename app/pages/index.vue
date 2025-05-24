@@ -117,33 +117,20 @@
 
                 <!-- Departure and Return Dates -->
                 <div class="w-full md:col-span-1 lg:col-span-2">
-                  <div @click="toggleDatePicker" :class="[
+                  <!-- One-way date selection -->
+                  <div v-if="tripType === TripType.ONE_WAY" @click="toggleDatePicker('departure')" :class="[
                     'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
-                    showDatePicker
+                    showDatePicker === 'departure'
                       ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
                       : 'border-gray-300 hover:border-blue-400',
                   ]">
                     <div class="absolute top-2 sm:top-3 left-4 text-xs font-semibold text-gray-500 tracking-wide">
-                      {{
-                        tripType === "roundTrip"
-                          ? "Hin- und Rückflug"
-                          : "Hinflug"
-                      }}
+                      Hinflug
                     </div>
                     <div class="pt-6 sm:pt-8 pb-2 sm:pb-3 px-4">
                       <div class="flex items-center">
                         <span class="text-sm sm:text-base text-gray-800 font-medium truncate">
-                          {{
-                            tripType === TripType.ROUND_TRIP
-                              ? formatDate(
-                                dateRange.start
-                              ) +
-                              " - " +
-                              formatDate(
-                                dateRange.end
-                              )
-                              : formatDate(singleDate)
-                          }}
+                          {{ formatDate(singleDate) }}
                         </span>
                         <svg xmlns="http://www.w3.org/2000/svg"
                           class="h-4 w-4 sm:h-5 sm:w-5 ml-2 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24"
@@ -151,6 +138,59 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Round trip date selection -->
+                  <div v-else class="grid grid-cols-2 gap-4">
+                    <!-- Departure date -->
+                    <div @click="toggleDatePicker('departure')" :class="[
+                      'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
+                      showDatePicker === 'departure'
+                        ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
+                        : 'border-gray-300 hover:border-blue-400',
+                    ]">
+                      <div class="absolute top-2 sm:top-3 left-4 text-xs font-semibold text-gray-500 tracking-wide">
+                        Hinflug
+                      </div>
+                      <div class="pt-6 sm:pt-8 pb-2 sm:pb-3 px-4">
+                        <div class="flex items-center">
+                          <span class="text-sm sm:text-base text-gray-800 font-medium truncate">
+                            {{ formatDate(dateRange.start) }}
+                          </span>
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 sm:h-5 sm:w-5 ml-2 text-gray-400 flex-shrink-0" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Return date -->
+                    <div @click="toggleDatePicker('return')" :class="[
+                      'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
+                      showDatePicker === 'return'
+                        ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
+                        : 'border-gray-300 hover:border-blue-400',
+                    ]">
+                      <div class="absolute top-2 sm:top-3 left-4 text-xs font-semibold text-gray-500 tracking-wide">
+                        Rückflug
+                      </div>
+                      <div class="pt-6 sm:pt-8 pb-2 sm:pb-3 px-4">
+                        <div class="flex items-center">
+                          <span class="text-sm sm:text-base text-gray-800 font-medium truncate">
+                            {{ formatDate(dateRange.end) }}
+                          </span>
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 sm:h-5 sm:w-5 ml-2 text-gray-400 flex-shrink-0" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -176,40 +216,23 @@
 
                     <!-- Calendar for available dates -->
                     <div v-else>
-                      <h3 class="text-lg font-semibold mb-3">{{ tripType === TripType.ROUND_TRIP ? 'Hinflug wählen' :
-                        'Flugtag wählen' }}</h3>
+                      <h3 class="text-lg font-semibold mb-3">
+                        {{ showDatePicker === 'departure' ? 'Hinflug wählen' : 'Rückflug wählen' }}
+                      </h3>
 
-                      <UCalendar :model-value="tripType === TripType.ROUND_TRIP ? dateRange : singleDate"
-                        @update:model-value="(val) => tripType === TripType.ROUND_TRIP ? dateRange = val : singleDate = val"
-                        :is-date-disabled="isDateDisabled" :range="tripType === TripType.ROUND_TRIP" :min-value="today"
+                      <UCalendar
+                        :model-value="showDatePicker === 'departure' ? (tripType === TripType.ROUND_TRIP ? dateRange.start : singleDate) : dateRange.end"
+                        @update:model-value="handleDateSelection"
+                        :is-date-disabled="showDatePicker === 'departure' ? isDateDisabled : isReturnDateDisabled"
+                        :range="false" :min-value="showDatePicker === 'return' ? dateRange.start : today"
                         class="w-full">
                         <template #day="{ day }">
                           <span :class="{
-                            'text-blue-600 font-semibold': !isDateDisabled(day),
-                            'text-gray-400': isDateDisabled(day)
+                            'text-blue-600 font-semibold': !(showDatePicker === 'departure' ? isDateDisabled(day) : isReturnDateDisabled(day)),
+                            'text-gray-400': showDatePicker === 'departure' ? isDateDisabled(day) : isReturnDateDisabled(day)
                           }">{{ day.day }}</span>
                         </template>
                       </UCalendar>
-
-                      <!-- Return flight selection for round trips -->
-                      <div v-if="tripType === TripType.ROUND_TRIP">
-                        <div v-if="availableReturnDates.length > 0" class="mt-6">
-                          <h3 class="text-lg font-semibold mb-3">Rückflug wählen</h3>
-                          <UCalendar :model-value="dateRange" @update:model-value="(val) => dateRange = val"
-                            :is-date-disabled="isReturnDateDisabled" range :min-value="dateRange.start" class="w-full">
-                            <template #day="{ day }">
-                              <span :class="{
-                                'text-blue-600 font-semibold': !isReturnDateDisabled(day),
-                                'text-gray-400': isReturnDateDisabled(day)
-                              }">{{ day.day }}</span>
-                            </template>
-                          </UCalendar>
-                        </div>
-                        <div v-else
-                          class="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-400 text-yellow-800 rounded-lg text-center">
-                          Für die gewählte Strecke sind aktuell keine Rückflüge verfügbar.
-                        </div>
-                      </div>
                     </div>
 
                     <div class="mt-4 sm:mt-5 flex justify-end">
@@ -430,21 +453,16 @@ const today = new CalendarDate(
   new Date().getDate()
 );
 
-// For round trip, use a range object
+// Update the date handling in the script section
 const dateRange = ref({
-  start: today,
-  end: new CalendarDate(
-    today.year,
-    today.month,
-    today.day + 7
-  ),
+  start: null,
+  end: null
 });
 
-// For one-way trip, use a single date
-const singleDate = ref(today);
+const singleDate = ref(null);
 
 // UI state
-const showDatePicker = ref(false);
+const showDatePicker = ref(null);
 const passengersActive = ref(false);
 const errorMessage = ref("");
 
@@ -499,9 +517,11 @@ const toCalendarDate = (dateString) => {
   return new CalendarDate(year, month, day);
 };
 
-const toggleDatePicker = () => {
-  showDatePicker.value = !showDatePicker.value;
-  if (showDatePicker.value) {
+const toggleDatePicker = (type) => {
+  if (showDatePicker.value === type) {
+    showDatePicker.value = null;
+  } else {
+    showDatePicker.value = type;
     passengersActive.value = false;
   }
 };
@@ -509,7 +529,7 @@ const toggleDatePicker = () => {
 const togglePassengersDropdown = () => {
   passengersActive.value = !passengersActive.value;
   if (passengersActive.value) {
-    showDatePicker.value = false;
+    showDatePicker.value = null;
   }
 };
 
@@ -538,24 +558,17 @@ watch([departure, arrival], async ([newDeparture, newArrival]) => {
   }
 }, { immediate: false });
 
-// Handle changes to trip type
+// Update the watch for trip type changes
 watch(tripType, (newTripType) => {
-  // Reset dateRange if switching between trip types
   if (newTripType === TripType.ONE_WAY) {
-    // We'll use the departure date from the round trip if available
     if (dateRange.value.start) {
       singleDate.value = dateRange.value.start;
     }
   } else {
-    // We'll use the one-way date as the start date if available
     if (singleDate.value) {
       dateRange.value.start = singleDate.value;
-      // Set the return date to 7 days after departure
-      dateRange.value.end = new CalendarDate(
-        singleDate.value.year,
-        singleDate.value.month,
-        singleDate.value.day + 7
-      );
+      dateRange.value.end = null;
+      fetchReturnDates(singleDate.value);
     }
   }
 });
@@ -606,77 +619,82 @@ const fetchAvailableDates = async () => {
   }
 };
 
-// Fetch available return flight dates
+// Update the fetchReturnDates function
 const fetchReturnDates = async (departureDate) => {
   if (!departure.value || !arrival.value || !departureDate) {
     return;
   }
 
   try {
-    // For return flights, we swap origin and destination
     const response = await $fetch('/api/flights/available-dates', {
       method: 'POST',
       body: {
-        origin: arrival.value,  // Swapped
-        destination: departure.value  // Swapped
+        origin: arrival.value,
+        destination: departure.value
       }
     });
 
     if (response.success && response.data) {
-      // Filter dates that are on or after the departure date
       const departureDateStr = toDateString(departureDate);
       availableReturnDates.value = response.data.dates.filter(
         date => date.date >= departureDateStr
       );
-
-      // Set a default return date if available
-      if (availableReturnDates.value.length > 0) {
-        // Try to find a date 7 days after departure, or use the first available
-        const preferredReturnDate = toDateString(new CalendarDate(
-          departureDate.year,
-          departureDate.month,
-          departureDate.day + 7
-        ));
-
-        const returnDateMatch = availableReturnDates.value.find(d => d.date === preferredReturnDate)
-          || availableReturnDates.value[0];
-
-        dateRange.value.end = toCalendarDate(returnDateMatch.date);
-      }
     }
   } catch (error) {
     console.error('Error in fetchReturnDates:', error);
+    availableReturnDates.value = [];
   }
 };
 
-// Handle calendar date selection
-watch(() => dateRange.value.start, async (newDate) => {
-  if (tripType.value === TripType.ROUND_TRIP && newDate) {
-    await fetchReturnDates(newDate);
+// Function to handle date selection
+const handleDateSelection = (date) => {
+  if (showDatePicker.value === 'departure') {
+    if (tripType.value === TripType.ROUND_TRIP) {
+      dateRange.value.start = date;
+      // Clear return date when departure changes
+      dateRange.value.end = null;
+      // Fetch new return dates
+      fetchReturnDates(date);
+    } else {
+      singleDate.value = date;
+    }
+  } else if (showDatePicker.value === 'return') {
+    dateRange.value.end = date;
   }
-}, { immediate: false });
+};
 
+// Handle booking
 const handleBooking = async () => {
-  console.log('Search button clicked');
-  console.log('Current state:', {
-    departure: departure.value,
-    arrival: arrival.value,
-    tripType: tripType.value,
-    dateRange: dateRange.value,
-    singleDate: singleDate.value,
-    passengers: passengers
-  });
-
   if (!departure.value || !arrival.value) {
     errorMessage.value = "Please select both departure and destination airports.";
     return;
+  }
+
+  // Basic date validation
+  if (tripType.value === TripType.ROUND_TRIP) {
+    if (!dateRange.value.start || !dateRange.value.end) {
+      errorMessage.value = "Bitte wählen Sie sowohl Hin- als auch Rückflug.";
+      return;
+    }
+
+    const departureDateStr = toDateString(dateRange.value.start);
+    const returnDateStr = toDateString(dateRange.value.end);
+
+    if (returnDateStr < departureDateStr) {
+      errorMessage.value = "Der Rückflug muss nach dem Hinflug stattfinden.";
+      return;
+    }
+  } else {
+    if (!singleDate.value) {
+      errorMessage.value = "Bitte wählen Sie ein Flugtag.";
+      return;
+    }
   }
 
   try {
     isSearchingFlights.value = true;
     errorMessage.value = "";
 
-    // Prepare the search parameters
     const searchParams = {
       origin: departure.value,
       destination: arrival.value,
@@ -688,7 +706,6 @@ const handleBooking = async () => {
       }
     };
 
-    // Add date parameters based on trip type
     if (tripType.value === TripType.ROUND_TRIP) {
       searchParams.departureDate = toDateString(dateRange.value.start);
       searchParams.returnDate = toDateString(dateRange.value.end);
@@ -696,9 +713,8 @@ const handleBooking = async () => {
       searchParams.departureDate = toDateString(singleDate.value);
     }
 
-    console.log('Sending search request with params:', searchParams);
+    console.log('Search params:', searchParams);
 
-    // Call the flight search API
     const response = await $fetch('/api/flights/search', {
       method: 'POST',
       body: searchParams
@@ -707,18 +723,46 @@ const handleBooking = async () => {
     console.log('Search response:', response);
 
     if (response.success && response.data) {
-      // Navigate to results page with flight ID and passenger info
+      // Find the exact flights for the selected dates
+      const departureFlight = response.data.flights.find(
+        flight => flight.date === searchParams.departureDate &&
+          flight.origin === searchParams.origin &&
+          flight.destination === searchParams.destination
+      );
+
+      let returnFlight = null;
+      if (tripType.value === TripType.ROUND_TRIP) {
+        returnFlight = response.data.flights.find(
+          flight => flight.date === searchParams.returnDate &&
+            flight.origin === searchParams.destination &&
+            flight.destination === searchParams.origin
+        );
+      }
+
+      if (!departureFlight) {
+        errorMessage.value = "Kein Flug für das ausgewählte Datum gefunden.";
+        return;
+      }
+
+      if (tripType.value === TripType.ROUND_TRIP && !returnFlight) {
+        errorMessage.value = "Kein Rückflug für das ausgewählte Datum gefunden.";
+        return;
+      }
+
       const queryParams = {
-        id: response.data.flights[0].id,
+        id: departureFlight.id,
         adults: searchParams.passengers.adults,
         children: searchParams.passengers.children,
-        infants: searchParams.passengers.infants
+        infants: searchParams.passengers.infants,
+        departureDate: searchParams.departureDate
       };
 
-      // If it's a round trip and we have a return flight, add its ID
-      if (tripType.value === TripType.ROUND_TRIP && response.data.flights.length > 1) {
-        queryParams.returnId = response.data.flights[1].id;
+      if (tripType.value === TripType.ROUND_TRIP && returnFlight) {
+        queryParams.returnId = returnFlight.id;
+        queryParams.returnDate = searchParams.returnDate;
       }
+
+      console.log('Navigating with params:', queryParams);
 
       navigateTo({
         path: '/flights',
@@ -738,7 +782,7 @@ const handleBooking = async () => {
 // Function to confirm date selection
 const confirmDateSelection = () => {
   // Close the date picker
-  showDatePicker.value = false;
+  showDatePicker.value = null;
 
   // Validate the selected dates
   if (tripType.value === TripType.ROUND_TRIP) {
@@ -768,7 +812,7 @@ const confirmDateSelection = () => {
   errorMessage.value = "";
 };
 
-// Add these new functions in the script section
+// Simplified date selection functions
 const isDateDisabled = (date) => {
   const dateStr = toDateString(date);
   return !availableDates.value.some(d => d.date === dateStr);
