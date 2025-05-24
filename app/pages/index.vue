@@ -184,7 +184,10 @@
                         :is-date-disabled="isDateDisabled" :range="tripType === TripType.ROUND_TRIP" :min-value="today"
                         class="w-full">
                         <template #day="{ day }">
-                          <span>{{ day.day }}</span>
+                          <span :class="{
+                            'text-blue-600 font-semibold': !isDateDisabled(day),
+                            'text-gray-400': isDateDisabled(day)
+                          }">{{ day.day }}</span>
                         </template>
                       </UCalendar>
 
@@ -195,7 +198,10 @@
                           <UCalendar :model-value="dateRange" @update:model-value="(val) => dateRange = val"
                             :is-date-disabled="isReturnDateDisabled" range :min-value="dateRange.start" class="w-full">
                             <template #day="{ day }">
-                              <span>{{ day.day }}</span>
+                              <span :class="{
+                                'text-blue-600 font-semibold': !isReturnDateDisabled(day),
+                                'text-gray-400': isReturnDateDisabled(day)
+                              }">{{ day.day }}</span>
                             </template>
                           </UCalendar>
                         </div>
@@ -274,7 +280,7 @@
                           </button>
                           <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                             passengers.adults
-                            }}</span>
+                          }}</span>
                           <button @click="
                             incrementPassenger(
                               'adults'
@@ -317,7 +323,7 @@
                           </button>
                           <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                             passengers.children
-                            }}</span>
+                          }}</span>
                           <button @click="
                             incrementPassenger(
                               'children'
@@ -360,7 +366,7 @@
                           </button>
                           <span class="mx-3 sm:mx-4 w-5 text-center font-medium">{{
                             passengers.infants
-                            }}</span>
+                          }}</span>
                           <button @click="
                             incrementPassenger(
                               'infants'
