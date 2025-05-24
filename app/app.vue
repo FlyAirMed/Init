@@ -54,7 +54,7 @@
       </div>
     </footer>
     <!-- WhatsApp Button -->
-    <a href="https://wa.me/4369911008764" target="_blank" rel="noopener"
+    <a href="https://wa.me/+436643869933" target="_blank" rel="noopener"
       class="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center w-16 h-16 transition-all duration-200 group"
       title="Jetzt via WhatsApp kontaktieren" aria-label="WhatsApp Kontakt">
       <img src="/assets/imags/whatsapp.svg" alt="WhatsApp" class="w-9 h-9" />
