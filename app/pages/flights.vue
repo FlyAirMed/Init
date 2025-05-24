@@ -384,64 +384,48 @@ const formatDate = (dateString) => {
     });
 };
 
-// Format segment time
-const formatSegmentTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
-};
-
-// Calculate duration between two times
-const calculateDuration = (departureTime, arrivalTime) => {
-    if (!departureTime || !arrivalTime) return '-- : --';
-
-    // Convert ISO strings to time strings first
-    const depTimeStr = new Date(departureTime).toTimeString().slice(0, 5);
-    const arrTimeStr = new Date(arrivalTime).toTimeString().slice(0, 5);
-
-    const [depHours, depMinutes] = depTimeStr.split(':').map(Number);
-    const [arrHours, arrMinutes] = arrTimeStr.split(':').map(Number);
-
-    // Validate that we have valid numbers
-    if (isNaN(depHours) || isNaN(depMinutes) || isNaN(arrHours) || isNaN(arrMinutes)) {
-        return '-- : --';
+// Hilfsfunktion für Preis je nach Buchungstyp
+function getFlightPrice(flight, type = 'oneWay') {
+    if (!flight || !flight.prices) return 0;
+    const prices = flight.prices;
+    if (type === 'roundTrip') {
+        return {
+            adult: prices.roundTripAdult ?? prices.adult,
+            child: prices.roundTripChild ?? prices.child,
+            infant: prices.roundTripInfant ?? prices.infant,
+        };
+    } else {
+        return {
+            adult: prices.adult,
+            child: prices.child,
+            infant: prices.infant,
+        };
     }
+}
 
-    let durationMinutes = (arrHours * 60 + arrMinutes) - (depHours * 60 + depMinutes);
-    if (durationMinutes < 0) durationMinutes += 24 * 60; // Handle next day arrival
-
-    const hours = Math.floor(durationMinutes / 60);
-    const minutes = durationMinutes % 60;
-    return `${hours}h ${minutes}min`;
-};
-
-// Calculate total price for a flight
+// Angepasste Preisberechnung
 const calculateTotalPrice = (flight) => {
     if (!flight || !flight.prices) return 0;
     if (!searchParams.value) return flight.prices.adult || 0;
 
     const { adults = 1, children = 0, infants = 0 } = searchParams.value.passengers || {};
 
-    // Calculate price for the current flight
-    const adultTotal = Number(flight.prices.adult) * Number(adults);
-    const childTotal = Number(flight.prices.child) * Number(children);
-    const infantTotal = Number(flight.prices.infant) * Number(infants);
-    const currentFlightPrice = Number((adultTotal + childTotal + infantTotal).toFixed(2));
-
-    // If this is the outbound flight and we have a return flight, add its price
-    if (flight.id === selectedFlight.value?.id && selectedReturnFlight.value) {
-        const returnAdultTotal = Number(selectedReturnFlight.value.prices.adult) * Number(adults);
-        const returnChildTotal = Number(selectedReturnFlight.value.prices.child) * Number(children);
-        const returnInfantTotal = Number(selectedReturnFlight.value.prices.infant) * Number(infants);
-        const returnFlightPrice = Number((returnAdultTotal + returnChildTotal + returnInfantTotal).toFixed(2));
-        return Number((currentFlightPrice + returnFlightPrice).toFixed(2));
+    // Wenn ein Rückflug ausgewählt ist, summiere beide Flüge (jeweils roundTrip-Preise)
+    if (selectedReturnFlight.value) {
+        const priceObjOut = getFlightPrice(flight, 'roundTrip');
+        const priceObjReturn = getFlightPrice(selectedReturnFlight.value, 'roundTrip');
+        const adultTotal = Number(priceObjOut.adult) * Number(adults) + Number(priceObjReturn.adult) * Number(adults);
+        const childTotal = Number(priceObjOut.child) * Number(children) + Number(priceObjReturn.child) * Number(children);
+        const infantTotal = Number(priceObjOut.infant) * Number(infants) + Number(priceObjReturn.infant) * Number(infants);
+        return Number((adultTotal + childTotal + infantTotal).toFixed(2));
+    } else {
+        // Nur Hinflug (oneWay-Preise)
+        const priceObj = getFlightPrice(flight, 'oneWay');
+        const adultTotal = Number(priceObj.adult) * Number(adults);
+        const childTotal = Number(priceObj.child) * Number(children);
+        const infantTotal = Number(priceObj.infant) * Number(infants);
+        return Number((adultTotal + childTotal + infantTotal).toFixed(2));
     }
-
-    return currentFlightPrice;
 };
 
 const priceText = computed(() => {

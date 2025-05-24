@@ -54,7 +54,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -77,7 +77,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -243,7 +243,7 @@
                                     class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                                     <div class="mb-2">
                                         <span class="text-sm font-medium text-gray-700">Dauer von {{ form.origin.label
-                                            }} nach {{
+                                        }} nach {{
                                                 form.destination.label }}</span>
                                     </div>
                                     <UFormGroup :state="formValidation.duration.valid ? undefined : false"
@@ -293,13 +293,27 @@
                                         <UIcon name="i-heroicons-user" class="h-5 w-5 text-blue-600" />
                                         <h5 class="font-medium text-blue-900">Erwachsene</h5>
                                     </div>
-                                    <UFormGroup label="Erwachsenenpreis (€)" class="text-base"
-                                        help="Preis für Erwachsene ab 12 Jahren"
+                                    <UFormGroup label="Erwachsenenpreis (One-Way) (€)" class="text-base"
+                                        help="Preis für Erwachsene ab 12 Jahren (nur Hin- oder Rückflug)"
                                         :state="formValidation.prices.adult.valid ? undefined : false"
                                         :error="formValidation.prices.adult.message">
                                         <div class="relative">
-                                            <UInput v-model="form.prices[PassengerType.ADULT]" type="number" min="0"
-                                                step="0.01" class="h-12 text-base pl-12" size="lg" />
+                                            <UInput v-model="form.prices.adult" type="number" min="0" step="0.01"
+                                                class="h-12 text-base pl-12" size="lg" />
+                                            <div
+                                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <span class="text-gray-500">€</span>
+                                            </div>
+                                        </div>
+                                    </UFormGroup>
+                                    <UFormGroup label="Erwachsenenpreis (Roundtrip) (€)" class="text-base"
+                                        help="Preis für Erwachsene bei Hin- und Rückflug zusammen"
+                                        :state="formValidation.prices.roundTripAdult?.valid ? undefined : false"
+                                        :error="formValidation.prices.roundTripAdult?.message">
+                                        <div class="relative">
+                                            <UInput v-model="form.prices.roundTripAdult" placeholder="Roundtrip"
+                                                type="number" min="0" step="0.01" class="h-12 text-base pl-12"
+                                                size="lg" />
                                             <div
                                                 class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                                 <span class="text-gray-500">€</span>
@@ -313,12 +327,25 @@
                                         <UIcon name="i-heroicons-user-group" class="h-5 w-5 text-green-600" />
                                         <h5 class="font-medium text-green-900">Kinder</h5>
                                     </div>
-                                    <UFormGroup label="Kinderpreis (€)" class="text-base"
-                                        help="Preis für Kinder von 2-11 Jahren"
+                                    <UFormGroup label="Kinderpreis (One-Way) (€)" class="text-base"
+                                        help="Preis für Kinder von 2-11 Jahren (nur Hin- oder Rückflug)"
                                         :state="formValidation.prices.child.valid ? undefined : false"
                                         :error="formValidation.prices.child.message">
                                         <div class="relative">
-                                            <UInput v-model="form.prices[PassengerType.CHILD]" type="number" min="0"
+                                            <UInput v-model="form.prices.child" type="number" min="0" step="0.01"
+                                                class="h-12 text-base pl-12" size="lg" />
+                                            <div
+                                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <span class="text-gray-500">€</span>
+                                            </div>
+                                        </div>
+                                    </UFormGroup>
+                                    <UFormGroup label="Kinderpreis (Roundtrip) (€)" class="text-base"
+                                        help="Preis für Kinder bei Hin- und Rückflug zusammen"
+                                        :state="formValidation.prices.roundTripChild?.valid ? undefined : false"
+                                        :error="formValidation.prices.roundTripChild?.message">
+                                        <div class="relative">
+                                            <UInput v-model="form.prices.roundTripChild" type="number" min="0"
                                                 step="0.01" class="h-12 text-base pl-12" size="lg" />
                                             <div
                                                 class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -333,12 +360,25 @@
                                         <UIcon name="i-heroicons-user-circle" class="h-5 w-5 text-purple-600" />
                                         <h5 class="font-medium text-purple-900">Säuglinge</h5>
                                     </div>
-                                    <UFormGroup label="Säuglingspreis (€)" class="text-base"
-                                        help="Preis für Säuglinge unter 2 Jahren"
+                                    <UFormGroup label="Säuglingspreis (One-Way) (€)" class="text-base"
+                                        help="Preis für Säuglinge unter 2 Jahren (nur Hin- oder Rückflug)"
                                         :state="formValidation.prices.infant.valid ? undefined : false"
                                         :error="formValidation.prices.infant.message">
                                         <div class="relative">
-                                            <UInput v-model="form.prices[PassengerType.INFANT]" type="number" min="0"
+                                            <UInput v-model="form.prices.infant" type="number" min="0" step="0.01"
+                                                class="h-12 text-base pl-12" size="lg" />
+                                            <div
+                                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <span class="text-gray-500">€</span>
+                                            </div>
+                                        </div>
+                                    </UFormGroup>
+                                    <UFormGroup label="Säuglingspreis (Roundtrip) (€)" class="text-base"
+                                        help="Preis für Säuglinge bei Hin- und Rückflug zusammen"
+                                        :state="formValidation.prices.roundTripInfant?.valid ? undefined : false"
+                                        :error="formValidation.prices.roundTripInfant?.message">
+                                        <div class="relative">
+                                            <UInput v-model="form.prices.roundTripInfant" type="number" min="0"
                                                 step="0.01" class="h-12 text-base pl-12" size="lg" />
                                             <div
                                                 class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -395,7 +435,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue';
-import { AIRPORTS, FlightStatus, PassengerType } from '~~/types';
+import { AIRPORTS, FlightStatus } from '~~/types';
 
 const props = defineProps({
     open: Boolean,
@@ -427,7 +467,7 @@ const isFormValid = computed(() => {
         departureTime: form.departureTime,
         arrivalTime: form.arrivalTime,
         availableSeats: form.availableSeats,
-        adultPrice: form.prices[PassengerType.ADULT],
+        adultPrice: form.prices.adult,
         intermediateStop: form.intermediateStop,
         showIntermediateStop: showIntermediateStop.value
     });
@@ -448,14 +488,8 @@ const isFormValid = computed(() => {
         return false;
     }
 
-    if (!form.prices[PassengerType.ADULT] || form.prices[PassengerType.ADULT] <= 0) {
+    if (!form.prices.adult || form.prices.adult <= 0) {
         console.log('Invalid adult price');
-        return false;
-    }
-
-    // Validate times
-    if (!validateTimeSequence(form.departureTime, form.arrivalTime)) {
-        console.log('Invalid time sequence for main flight');
         return false;
     }
 
@@ -463,21 +497,6 @@ const isFormValid = computed(() => {
     if (showIntermediateStop.value) {
         if (!form.intermediateStop.arrival || !form.intermediateStop.departure) {
             console.log('Intermediate stop times missing');
-            return false;
-        }
-
-        if (!validateTimeSequence(form.departureTime, form.intermediateStop.arrival)) {
-            console.log('Invalid time sequence for first segment');
-            return false;
-        }
-
-        if (!validateTimeSequence(form.intermediateStop.arrival, form.intermediateStop.departure)) {
-            console.log('Invalid time sequence for intermediate stop');
-            return false;
-        }
-
-        if (!validateRestTime(form.intermediateStop.arrival, form.intermediateStop.departure)) {
-            console.log('Invalid rest time');
             return false;
         }
     }
@@ -496,9 +515,12 @@ const initialFormState = {
     duration: '',
     availableSeats: 150,
     prices: {
-        [PassengerType.ADULT]: 299.99,
-        [PassengerType.CHILD]: 179.99,
-        [PassengerType.INFANT]: 49.99,
+        adult: 299.99,
+        child: 179.99,
+        infant: 49.99,
+        roundTripAdult: 0,
+        roundTripChild: 0,
+        roundTripInfant: 0
     },
     status: FlightStatus.ACTIVE,
     segments: [],
@@ -531,25 +553,6 @@ const validateDate = (date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return selectedDate >= today;
-};
-
-const validateTimeSequence = (departure, arrival) => {
-    if (!departure || !arrival) return true;
-    const [depHours, depMinutes] = departure.split(':').map(Number);
-    const [arrHours, arrMinutes] = arrival.split(':').map(Number);
-    const depTotal = depHours * 60 + depMinutes;
-    const arrTotal = arrHours * 60 + arrMinutes;
-    return arrTotal > depTotal || arrTotal + 24 * 60 > depTotal; // Allow next day
-};
-
-const validateRestTime = (arrival, departure) => {
-    if (!arrival || !departure) return true;
-    const [arrHours, arrMinutes] = arrival.split(':').map(Number);
-    const [depHours, depMinutes] = departure.split(':').map(Number);
-    const arrTotal = arrHours * 60 + arrMinutes;
-    const depTotal = depHours * 60 + depMinutes;
-    const restMinutes = depTotal > arrTotal ? depTotal - arrTotal : depTotal + 24 * 60 - arrTotal;
-    return restMinutes >= 30; // Minimum 30 minutes rest time
 };
 
 // Modify formValidation computed
@@ -602,16 +605,16 @@ const formValidation = computed(() => ({
     },
     prices: {
         adult: {
-            valid: form.prices[PassengerType.ADULT] > 0,
-            message: form.prices[PassengerType.ADULT] <= 0 ? 'Bitte geben Sie einen gültigen Preis für Erwachsene ein' : ''
+            valid: form.prices.adult > 0,
+            message: form.prices.adult <= 0 ? 'Bitte geben Sie einen gültigen Preis für Erwachsene ein' : ''
         },
         child: {
-            valid: form.prices[PassengerType.CHILD] > 0,
-            message: form.prices[PassengerType.CHILD] <= 0 ? 'Bitte geben Sie einen gültigen Preis für Kinder ein' : ''
+            valid: form.prices.child > 0,
+            message: form.prices.child <= 0 ? 'Bitte geben Sie einen gültigen Preis für Kinder ein' : ''
         },
         infant: {
-            valid: form.prices[PassengerType.INFANT] > 0,
-            message: form.prices[PassengerType.INFANT] <= 0 ? 'Bitte geben Sie einen gültigen Preis für Säuglinge ein' : ''
+            valid: form.prices.infant > 0,
+            message: form.prices.infant <= 0 ? 'Bitte geben Sie einen gültigen Preis für Säuglinge ein' : ''
         }
     },
     baggageAllowance: {
@@ -645,9 +648,12 @@ const showIntermediateStop = computed(() => {
 const resetForm = () => {
     Object.assign(form, initialFormState);
     form.prices = {
-        [PassengerType.ADULT]: 0,
-        [PassengerType.CHILD]: 0,
-        [PassengerType.INFANT]: 0,
+        adult: 0,
+        child: 0,
+        infant: 0,
+        roundTripAdult: 0,
+        roundTripChild: 0,
+        roundTripInfant: 0
     };
     form.intermediateStop = {
         arrival: '',
@@ -676,15 +682,23 @@ watch(() => props.flight, (newFlight) => {
                 const firstSegment = newFlight.segments[0];
                 const secondSegment = newFlight.segments[1];
 
-                form.departureTime = new Date(firstSegment.departure).toTimeString().slice(0, 5);
-                form.intermediateStop.arrival = new Date(firstSegment.arrival).toTimeString().slice(0, 5);
-                form.intermediateStop.departure = new Date(secondSegment.departure).toTimeString().slice(0, 5);
-                form.arrivalTime = new Date(secondSegment.arrival).toTimeString().slice(0, 5);
+                form.departureTime = firstSegment.departure;
+                form.intermediateStop.arrival = firstSegment.arrival;
+                form.intermediateStop.departure = secondSegment.departure;
+                form.arrivalTime = secondSegment.arrival;
+
+                // NEU: Lade Flugnummern und Dauern
+                form.flightNumber = firstSegment.flightNumber || '';
+                form.duration = firstSegment.duration || '';
+                form.intermediateStop.flightNumber = secondSegment.flightNumber || '';
+                form.intermediateStop.duration = secondSegment.duration || '';
             } else {
                 // Direct flight
                 const segment = newFlight.segments[0];
-                form.departureTime = new Date(segment.departure).toTimeString().slice(0, 5);
-                form.arrivalTime = new Date(segment.arrival).toTimeString().slice(0, 5);
+                form.departureTime = segment.departure;
+                form.arrivalTime = segment.arrival;
+                form.flightNumber = segment.flightNumber || '';
+                form.duration = segment.duration || '';
                 form.intermediateStop = {
                     arrival: '',
                     departure: '',
@@ -695,9 +709,12 @@ watch(() => props.flight, (newFlight) => {
         }
 
         form.prices = {
-            [PassengerType.ADULT]: newFlight.prices[PassengerType.ADULT] || 299.99,
-            [PassengerType.CHILD]: newFlight.prices[PassengerType.CHILD] || 179.99,
-            [PassengerType.INFANT]: newFlight.prices[PassengerType.INFANT] || 49.99,
+            adult: newFlight.prices?.adult || 299.99,
+            child: newFlight.prices?.child || 179.99,
+            infant: newFlight.prices?.infant || 49.99,
+            roundTripAdult: newFlight.prices?.roundTripAdult || 0,
+            roundTripChild: newFlight.prices?.roundTripChild || 0,
+            roundTripInfant: newFlight.prices?.roundTripInfant || 0
         };
 
         form.baggageAllowance = {
@@ -809,9 +826,12 @@ const saveFlight = async () => {
             duration: form.duration,
             availableSeats: Number(form.availableSeats),
             prices: {
-                [PassengerType.ADULT]: Number(form.prices[PassengerType.ADULT]),
-                [PassengerType.CHILD]: Number(form.prices[PassengerType.CHILD]),
-                [PassengerType.INFANT]: Number(form.prices[PassengerType.INFANT]),
+                adult: Number(form.prices.adult),
+                child: Number(form.prices.child),
+                infant: Number(form.prices.infant),
+                roundTripAdult: Number(form.prices.roundTripAdult) || 0,
+                roundTripChild: Number(form.prices.roundTripChild) || 0,
+                roundTripInfant: Number(form.prices.roundTripInfant) || 0
             },
             status: form.status || FlightStatus.ACTIVE,
             segments: segments,

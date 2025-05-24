@@ -34,6 +34,9 @@ export interface FlightPrices {
   [PassengerType.ADULT]: number;
   [PassengerType.CHILD]: number;
   [PassengerType.INFANT]: number;
+  roundTripAdult?: number;
+  roundTripChild?: number;
+  roundTripInfant?: number;
 }
 
 export interface Flight {

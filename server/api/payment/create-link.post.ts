@@ -88,7 +88,24 @@ export default defineEventHandler(async (event) => {
       returnFlightData = returnFlightDoc.data();
     }
 
-    // Calculate total price
+    // Calculate total price (jetzt mit roundTrip-Logik)
+    const getFlightPrice = (flight: any, type: 'oneWay' | 'roundTrip') => {
+      if (!flight || !flight.prices) return { adult: 0, child: 0, infant: 0 };
+      if (type === 'roundTrip') {
+        return {
+          adult: flight.prices.roundTripAdult ?? flight.prices.adult,
+          child: flight.prices.roundTripChild ?? flight.prices.child,
+          infant: flight.prices.roundTripInfant ?? flight.prices.infant,
+        };
+      } else {
+        return {
+          adult: flight.prices.adult,
+          child: flight.prices.child,
+          infant: flight.prices.infant,
+        };
+      }
+    };
+
     const calculateFlightPrice = (prices: { adult: number; child: number; infant: number }, passengers: { adults: number; children: number; infants: number }) => {
       const adultTotal = Number(prices.adult) * Number(passengers.adults);
       const childTotal = Number(prices.child) * Number(passengers.children);
@@ -96,33 +113,22 @@ export default defineEventHandler(async (event) => {
       return Number((adultTotal + childTotal + infantTotal).toFixed(2));
     };
 
-    const outboundTotal = calculateFlightPrice(
-      {
-        adult: Number(metadata.price_adult) || 0,
-        child: Number(metadata.price_child) || 0,
-        infant: Number(metadata.price_infant) || 0
-      },
-      {
-        adults: Number(metadata.passengers_adults) || 0,
-        children: Number(metadata.passengers_children) || 0,
-        infants: Number(metadata.passengers_infants) || 0
-      }
-    );
+    const passengerCounts = {
+      adults: Number(metadata.passengers_adults) || 0,
+      children: Number(metadata.passengers_children) || 0,
+      infants: Number(metadata.passengers_infants) || 0
+    };
 
+    // Outbound (Hinflug)
+    const outboundPriceObj = getFlightPrice(flightData, metadata.returnFlightId ? 'roundTrip' : 'oneWay');
+    const outboundTotal = calculateFlightPrice(outboundPriceObj, passengerCounts);
+
+    // Return (Rückflug, falls vorhanden)
     let returnTotal = 0;
-    if (metadata.returnFlightId && metadata.return_price_adult) {
-      returnTotal = calculateFlightPrice(
-        {
-          adult: Number(metadata.return_price_adult) || 0,
-          child: Number(metadata.return_price_child) || 0,
-          infant: Number(metadata.return_price_infant) || 0
-        },
-        {
-          adults: Number(metadata.passengers_adults) || 0,
-          children: Number(metadata.passengers_children) || 0,
-          infants: Number(metadata.passengers_infants) || 0
-        }
-      );
+    let returnPriceObj = null;
+    if (metadata.returnFlightId && returnFlightData) {
+      returnPriceObj = getFlightPrice(returnFlightData, 'roundTrip');
+      returnTotal = calculateFlightPrice(returnPriceObj, passengerCounts);
     }
 
     const totalAmount = Number((outboundTotal + returnTotal).toFixed(2));
@@ -197,6 +203,23 @@ export default defineEventHandler(async (event) => {
     const docRef = await bookingsRef.add(bookingData);
     console.log('Booking saved with ID:', docRef.id);
 
+    // Passe die Metadaten für Stripe an, damit die richtigen Preise in den E-Mails stehen
+    const stripeMetadata = {
+      ...metadata,
+      bookingId: docRef.id,
+      price_adult: String(outboundPriceObj.adult),
+      price_child: String(outboundPriceObj.child),
+      price_infant: String(outboundPriceObj.infant),
+      total_outbound: String(outboundTotal),
+      ...(metadata.returnFlightId && returnPriceObj && {
+        return_price_adult: String(returnPriceObj.adult),
+        return_price_child: String(returnPriceObj.child),
+        return_price_infant: String(returnPriceObj.infant),
+        total_return: String(returnTotal)
+      }),
+      total_amount: String(totalAmount)
+    };
+
     // Create Stripe payment link
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -216,13 +239,7 @@ export default defineEventHandler(async (event) => {
       mode: 'payment',
       success_url: `${config.public.publicUrl}/booking/success`,
       cancel_url: `${config.public.publicUrl}/`,
-      metadata: {
-        bookingId: docRef.id,
-        ...metadata,
-        total_outbound: String(outboundTotal),
-        total_return: String(returnTotal),
-        total_amount: String(totalAmount)
-      },
+      metadata: stripeMetadata,
     });
 
     return { url: session.url };

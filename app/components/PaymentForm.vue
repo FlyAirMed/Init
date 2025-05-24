@@ -38,7 +38,7 @@
               <div class="flex items-center gap-4">
                 <span class="text-gray-600">{{ bookingDetails?.date }}</span>
                 <span class="text-blue-600 font-semibold">{{ formatAmount(calculateFlightPrice(bookingDetails?.prices))
-                  }}€</span>
+                }}€</span>
               </div>
             </div>
             <!-- Return Flight -->
@@ -46,7 +46,7 @@
               <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-arrow-left" class="h-4 w-4 text-gray-500" />
                 <span class="text-gray-600">Rückflug: {{ bookingDetails?.returnFrom }} → {{ bookingDetails?.returnTo
-                  }}</span>
+                }}</span>
               </div>
               <div class="flex items-center gap-4">
                 <span class="text-gray-600">{{ bookingDetails?.returnDate }}</span>
@@ -85,7 +85,7 @@
               </div>
               <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.child *
                 bookingDetails.passengers.children)
-              }}€</span>
+                }}€</span>
             </div>
             <div v-if="bookingDetails?.passengers?.infants" class="flex justify-between items-center">
               <div class="flex items-center gap-2">
@@ -94,7 +94,7 @@
               </div>
               <span class="text-gray-600">{{ formatAmount(bookingDetails.prices.infant *
                 bookingDetails.passengers.infants)
-              }}€</span>
+                }}€</span>
             </div>
           </div>
         </div>
@@ -174,6 +174,15 @@ interface AdditionalPassenger {
   type: 'adult' | 'child' | 'infant';
 }
 
+interface FlightPrices {
+  adult: number;
+  child: number;
+  infant: number;
+  roundTripAdult?: number;
+  roundTripChild?: number;
+  roundTripInfant?: number;
+}
+
 const props = defineProps<{
   amount: number;
   currency?: string;
@@ -191,26 +200,47 @@ const formatAmount = (amount: number) => {
   return amount.toFixed(2);
 };
 
-const calculateFlightPrice = (prices: { adult: number; child: number; infant: number } | undefined) => {
+const getFlightPrice = (prices: FlightPrices | undefined, type = 'oneWay') => {
+  if (!prices) return { adult: 0, child: 0, infant: 0 };
+  if (type === 'roundTrip') {
+    return {
+      adult: prices.roundTripAdult ?? prices.adult,
+      child: prices.roundTripChild ?? prices.child,
+      infant: prices.roundTripInfant ?? prices.infant,
+    };
+  } else {
+    return {
+      adult: prices.adult,
+      child: prices.child,
+      infant: prices.infant,
+    };
+  }
+};
+
+const calculateFlightPrice = (prices: FlightPrices | undefined, type = 'oneWay') => {
   if (!prices || !props.bookingDetails?.passengers) return 0;
-
   const { adults = 0, children = 0, infants = 0 } = props.bookingDetails.passengers;
-
-  const adultTotal = Number(prices.adult) * Number(adults);
-  const childTotal = Number(prices.child) * Number(children);
-  const infantTotal = Number(prices.infant) * Number(infants);
-
+  const priceObj = getFlightPrice(prices, type);
+  const adultTotal = Number(priceObj.adult) * Number(adults);
+  const childTotal = Number(priceObj.child) * Number(children);
+  const infantTotal = Number(priceObj.infant) * Number(infants);
   return Number((adultTotal + childTotal + infantTotal).toFixed(2));
 };
 
 const totalAmount = computed(() => {
-  const outboundTotal = calculateFlightPrice(props.bookingDetails?.prices);
-  const returnTotal = calculateFlightPrice(props.bookingDetails?.returnPrices);
-  return Number((outboundTotal + returnTotal).toFixed(2));
+  if (props.bookingDetails?.returnFrom) {
+    // Summe aus Hin- und Rückflug (jeweils roundTrip)
+    return (
+      calculateFlightPrice(props.bookingDetails?.prices, 'roundTrip') +
+      calculateFlightPrice(props.bookingDetails?.returnPrices, 'roundTrip')
+    );
+  } else {
+    return calculateFlightPrice(props.bookingDetails?.prices, 'oneWay');
+  }
 });
 
 const createPaymentLink = async () => {
-  const calculatedTotal = totalAmount;
+  const calculatedTotal = totalAmount.value;
   if (calculatedTotal <= 0) {
     errorMessage.value = 'Ungültiger Gesamtpreis';
     return;
