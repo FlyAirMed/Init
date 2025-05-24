@@ -184,8 +184,8 @@ export default defineEventHandler(async (event) => {
               <div style="margin-bottom: 15px; padding: 10px; background-color: white; border-radius: 6px;">
                 <p><strong>Flug ${index + 1}:</strong> ${segment.flightNumber}</p>
                 <p><strong>Route:</strong> ${segment.from} → ${segment.to}</p>
-                <p><strong>Abflug:</strong> ${new Date(segment.departure).toLocaleString()}</p>
-                <p><strong>Ankunft:</strong> ${new Date(segment.arrival).toLocaleString()}</p>
+                <p><strong>Abflug:</strong> ${segment.departure}</p>
+                <p><strong>Ankunft:</strong> ${segment.arrival}</p>
                 <p><strong>Dauer:</strong> ${segment.duration}</p>
                 <p><strong>Gepäck:</strong> ${segment.baggageAllowance.cabin}kg Handgepäck, ${segment.baggageAllowance.checked}kg aufgegebenes Gepäck</p>
               </div>
