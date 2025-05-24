@@ -84,7 +84,7 @@
                                                     <div class="flex items-center">
                                                         <UIcon name="i-heroicons-currency-euro" class="h-5 w-5" />
                                                         <div class="text-lg font-bold">{{ calculateTotalPrice(flight)
-                                                        }}€</div>
+                                                            }}€</div>
                                                     </div>
                                                     <div class="text-xs text-white/90 mt-1 flex items-center gap-1">
                                                         <UIcon name="i-heroicons-information-circle" class="h-4 w-4" />
@@ -164,7 +164,7 @@
                                                         <div class="text-base font-semibold text-gray-800">{{
                                                             segment.arrival }}</div>
                                                         <div class="text-sm text-gray-600">{{ AIRPORTS[segment.to].name
-                                                            }}</div>
+                                                        }}</div>
                                                     </div>
                                                 </div>
                                             </div>

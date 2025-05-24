@@ -103,7 +103,7 @@
         <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
           <div class="flex justify-between items-center">
             <span class="text-lg font-semibold text-gray-900">Gesamtpreis</span>
-            <span class="text-2xl font-bold text-blue-600">{{ formatAmount(amount) }}€</span>
+            <span class="text-2xl font-bold text-blue-600">{{ formatAmount(totalAmount) }}€</span>
           </div>
         </div>
       </div>
@@ -118,7 +118,7 @@
         </template>
         <template v-else>
           <UIcon name="i-heroicons-credit-card" class="h-5 w-5 mr-2" />
-          {{ formatAmount(amount) }}€ bezahlen
+          {{ formatAmount(totalAmount) }}€ bezahlen
         </template>
       </UButton>
       <p class="text-sm text-gray-500 text-center mt-2">
@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 interface BookingDetails {
@@ -203,20 +203,16 @@ const calculateFlightPrice = (prices: { adult: number; child: number; infant: nu
   return Number((adultTotal + childTotal + infantTotal).toFixed(2));
 };
 
-const createPaymentLink = async () => {
-  if (!props.amount || props.amount <= 0) {
-    errorMessage.value = 'Ungültiger Betrag';
-    return;
-  }
-
-  // Calculate total price
+const totalAmount = computed(() => {
   const outboundTotal = calculateFlightPrice(props.bookingDetails?.prices);
   const returnTotal = calculateFlightPrice(props.bookingDetails?.returnPrices);
-  const calculatedTotal = Number((outboundTotal + returnTotal).toFixed(2));
+  return Number((outboundTotal + returnTotal).toFixed(2));
+});
 
-  // Verify that the total matches the provided amount
-  if (Math.abs(calculatedTotal - props.amount) > 0.01) {
-    errorMessage.value = `Ungültiger Gesamtpreis. Erwartet: ${calculatedTotal}€, Bereitgestellt: ${props.amount}€`;
+const createPaymentLink = async () => {
+  const calculatedTotal = totalAmount;
+  if (calculatedTotal <= 0) {
+    errorMessage.value = 'Ungültiger Gesamtpreis';
     return;
   }
 
@@ -262,8 +258,8 @@ const createPaymentLink = async () => {
         return_price_adult: String(props.bookingDetails?.returnPrices?.adult || 0),
         return_price_child: String(props.bookingDetails?.returnPrices?.child || 0),
         return_price_infant: String(props.bookingDetails?.returnPrices?.infant || 0),
-        total_outbound: String(outboundTotal),
-        total_return: String(returnTotal)
+        total_outbound: String(calculateFlightPrice(props.bookingDetails?.prices)),
+        total_return: String(calculateFlightPrice(props.bookingDetails?.returnPrices))
       },
       contactPerson: {
         firstName: props.contactPerson.firstName,
