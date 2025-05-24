@@ -110,7 +110,7 @@ export default defineEventHandler(async (event) => {
     );
 
     let returnTotal = 0;
-    if (metadata.returnFlightId) {
+    if (metadata.returnFlightId && metadata.return_price_adult) {
       returnTotal = calculateFlightPrice(
         {
           adult: Number(metadata.return_price_adult) || 0,
@@ -152,11 +152,10 @@ export default defineEventHandler(async (event) => {
     // Speichere die Buchung in Firestore
     const bookingsRef = db.collection('bookings');
 
-    const bookingData = {
+    // Create booking data object with only defined values
+    const bookingData: any = {
       flightId: metadata.flightId,
       flightData: flightData,
-      returnFlightId: metadata.returnFlightId,
-      returnFlightData: returnFlightData,
       contactPerson: {
         firstName: contactPerson.firstName,
         lastName: contactPerson.lastName,
@@ -172,11 +171,28 @@ export default defineEventHandler(async (event) => {
         type: passenger.type
       })),
       amount: amount,
-      metadata,
+      metadata: {
+        ...metadata,
+        // Only include return flight data if it exists
+        ...(metadata.returnFlightId && {
+          returnFlightId: metadata.returnFlightId,
+          returnFrom: metadata.returnFrom,
+          returnTo: metadata.returnTo,
+          returnDate: metadata.returnDate,
+          return_price_adult: metadata.return_price_adult,
+          return_price_child: metadata.return_price_child,
+          return_price_infant: metadata.return_price_infant
+        })
+      },
       status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
+    // Only add returnFlightData if it exists
+    if (returnFlightData) {
+      bookingData.returnFlightData = returnFlightData;
+    }
 
     const docRef = await bookingsRef.add(bookingData);
     console.log('Booking saved with ID:', docRef.id);
