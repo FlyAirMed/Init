@@ -41,6 +41,9 @@ export default defineNuxtConfig({
           'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; font-src 'self' https://js.stripe.com; img-src 'self' data: https://*.stripe.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com;"
         }
       }
-    }
-  }
+    },
+    // Set host and port for Nitro server
+  },
+
+  // To set port and host, use NUXT_PORT and NUXT_HOST environment variables or pass via CLI.
 })

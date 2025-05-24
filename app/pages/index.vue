@@ -119,7 +119,7 @@
                 <div class="w-full md:col-span-1 lg:col-span-2">
                   <!-- One-way date selection -->
                   <div v-if="tripType === TripType.ONE_WAY" @click="toggleDatePicker('departure')" :class="[
-                    'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
+                    'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md date-picker-button',
                     showDatePicker === 'departure'
                       ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
                       : 'border-gray-300 hover:border-blue-400',
@@ -146,7 +146,7 @@
                   <div v-else class="grid grid-cols-2 gap-4">
                     <!-- Departure date -->
                     <div @click="toggleDatePicker('departure')" :class="[
-                      'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
+                      'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md date-picker-button',
                       showDatePicker === 'departure'
                         ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
                         : 'border-gray-300 hover:border-blue-400',
@@ -171,7 +171,7 @@
 
                     <!-- Return date -->
                     <div @click="toggleDatePicker('return')" :class="[
-                      'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
+                      'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md date-picker-button',
                       showDatePicker === 'return'
                         ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
                         : 'border-gray-300 hover:border-blue-400',
@@ -228,7 +228,7 @@
                         class="w-full">
                         <template #day="{ day }">
                           <span :class="{
-                            'text-blue-600 font-semibold': !(showDatePicker === 'departure' ? isDateDisabled(day) : isReturnDateDisabled(day)),
+                            'text-black-600 font-bold text-xl': !(showDatePicker === 'departure' ? isDateDisabled(day) : isReturnDateDisabled(day)),
                             'text-gray-400': showDatePicker === 'departure' ? isDateDisabled(day) : isReturnDateDisabled(day)
                           }">{{ day.day }}</span>
                         </template>
@@ -247,7 +247,7 @@
                 <!-- Passengers -->
                 <div class="w-full md:col-span-1">
                   <div @click="togglePassengersDropdown" :class="[
-                    'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md',
+                    'relative h-full border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md passengers-button',
                     passengersActive
                       ? 'border-blue-600 ring-2 ring-blue-600 ring-opacity-30'
                       : 'border-gray-300 hover:border-blue-400',
@@ -275,7 +275,7 @@
 
                   <!-- Passengers Dropdown -->
                   <div v-if="passengersActive"
-                    class="absolute z-50 mt-2 w-[calc(100%-2rem)] sm:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden backdrop-blur-xl bg-white/95 transition-all duration-300 left-4 right-4 sm:left-auto sm:right-auto lg:right-0">
+                    class="absolute z-50 mt-2 w-[calc(100%-2rem)] sm:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden backdrop-blur-xl bg-white/95 transition-all duration-300 left-4 right-4 sm:left-auto sm:right-auto lg:right-0 passengers-dropdown">
                     <div class="p-4 sm:p-5">
                       <!-- Adults -->
                       <div class="flex items-center justify-between py-3 sm:py-4 border-b border-gray-100">
@@ -431,7 +431,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from "vue";
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
 import { CalendarDate } from "@internationalized/date";
 import { AIRPORTS, TripType } from '../../types';
 
@@ -822,6 +822,66 @@ const isReturnDateDisabled = (date) => {
   const dateStr = toDateString(date);
   return !availableReturnDates.value.some(d => d.date === dateStr);
 };
+
+// Initialize dates when component mounts
+onMounted(() => {
+  // Set initial dates if they exist in localStorage
+  const savedDateRange = localStorage.getItem('dateRange');
+  const savedSingleDate = localStorage.getItem('singleDate');
+
+  if (savedDateRange) {
+    const { start, end } = JSON.parse(savedDateRange);
+    dateRange.value = {
+      start: start ? toCalendarDate(start) : null,
+      end: end ? toCalendarDate(end) : null
+    };
+  }
+
+  if (savedSingleDate) {
+    singleDate.value = toCalendarDate(savedSingleDate);
+  }
+
+  // Add click outside handlers
+  document.addEventListener('click', (event) => {
+    const passengersDropdown = document.querySelector('.passengers-dropdown');
+    const passengersButton = document.querySelector('.passengers-button');
+
+    if (passengersActive.value &&
+      passengersDropdown &&
+      !passengersDropdown.contains(event.target) &&
+      !passengersButton?.contains(event.target)) {
+      passengersActive.value = false;
+    }
+
+    const datePicker = document.querySelector('.calendar-wrapper');
+    const datePickerButtons = document.querySelectorAll('.date-picker-button');
+
+    if (showDatePicker.value &&
+      datePicker &&
+      !datePicker.contains(event.target) &&
+      !Array.from(datePickerButtons).some(button => button.contains(event.target))) {
+      showDatePicker.value = null;
+    }
+  });
+});
+
+// Save dates when they change
+watch([dateRange, singleDate], ([newDateRange, newSingleDate]) => {
+  if (newDateRange) {
+    localStorage.setItem('dateRange', JSON.stringify({
+      start: newDateRange.start ? toDateString(newDateRange.start) : null,
+      end: newDateRange.end ? toDateString(newDateRange.end) : null
+    }));
+  }
+
+  if (newSingleDate) {
+    localStorage.setItem('singleDate', toDateString(newSingleDate));
+  }
+}, { deep: true });
+
+onUnmounted(() => {
+  document.removeEventListener('click', () => { });
+});
 </script>
 
 <style scoped>
