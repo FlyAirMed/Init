@@ -245,7 +245,7 @@
                                     <div class="mb-2">
                                         <span class="text-sm font-medium text-gray-700">Dauer von {{ form.origin.label
                                             }} nach {{
-                                            form.destination.label }}</span>
+                                                form.destination.label }}</span>
                                     </div>
                                     <UFormGroup :state="formValidation.duration.valid ? undefined : false"
                                         :error="formValidation.duration.message">
@@ -747,8 +747,8 @@ const saveFlight = async () => {
                 segments.push({
                     from: origin,
                     to: 'ATH',
-                    departure: `${dateStr} ${form.departureTime}`,
-                    arrival: `${dateStr} ${form.intermediateStop.arrival}`,
+                    departure: form.departureTime,
+                    arrival: form.intermediateStop.arrival,
                     duration: form.duration,
                     flightNumber: form.flightNumber,
                     baggageAllowance: form.baggageAllowance
@@ -758,8 +758,8 @@ const saveFlight = async () => {
                 segments.push({
                     from: 'ATH',
                     to: destination,
-                    departure: `${dateStr} ${form.intermediateStop.departure}`,
-                    arrival: `${dateStr} ${form.arrivalTime}`,
+                    departure: form.intermediateStop.departure,
+                    arrival: form.arrivalTime,
                     duration: form.intermediateStop.duration,
                     flightNumber: form.intermediateStop.flightNumber,
                     baggageAllowance: form.baggageAllowance
@@ -769,8 +769,8 @@ const saveFlight = async () => {
                 segments.push({
                     from: origin,
                     to: 'ATH',
-                    departure: `${dateStr} ${form.departureTime}`,
-                    arrival: `${dateStr} ${form.intermediateStop.arrival}`,
+                    departure: form.departureTime,
+                    arrival: form.intermediateStop.arrival,
                     duration: form.duration,
                     flightNumber: form.flightNumber,
                     baggageAllowance: form.baggageAllowance
@@ -780,8 +780,8 @@ const saveFlight = async () => {
                 segments.push({
                     from: 'ATH',
                     to: destination,
-                    departure: `${dateStr} ${form.intermediateStop.departure}`,
-                    arrival: `${dateStr} ${form.arrivalTime}`,
+                    departure: form.intermediateStop.departure,
+                    arrival: form.arrivalTime,
                     duration: form.intermediateStop.duration,
                     flightNumber: form.intermediateStop.flightNumber,
                     baggageAllowance: form.baggageAllowance
@@ -792,8 +792,8 @@ const saveFlight = async () => {
             segments.push({
                 from: origin,
                 to: destination,
-                departure: `${dateStr} ${form.departureTime}`,
-                arrival: `${dateStr} ${form.arrivalTime}`,
+                departure: form.departureTime,
+                arrival: form.arrivalTime,
                 duration: form.duration,
                 flightNumber: form.flightNumber,
                 baggageAllowance: form.baggageAllowance
