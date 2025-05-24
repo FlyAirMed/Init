@@ -54,7 +54,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -77,7 +77,7 @@
                                                     <div>
                                                         <p class="font-medium">{{ item.value }}</p>
                                                         <p class="text-xs text-gray-500">{{ item.label.split(' - ')[1]
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </template>
@@ -244,7 +244,7 @@
                                     class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                                     <div class="mb-2">
                                         <span class="text-sm font-medium text-gray-700">Dauer von {{ form.origin.label
-                                            }} nach {{
+                                        }} nach {{
                                                 form.destination.label }}</span>
                                     </div>
                                     <UFormGroup :state="formValidation.duration.valid ? undefined : false"
